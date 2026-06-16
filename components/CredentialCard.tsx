@@ -2,93 +2,119 @@
 
 import { motion } from "framer-motion";
 
+const QR_PATTERN = [1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,0,1,0,1,1,0,0,1,1,1,1,0,1,1,1,1,0,0,0,0,1,0,0,1,1,1,1,0,1,1,1,0,1];
+
 export default function CredentialCard() {
   return (
-    <div className="relative w-full max-w-sm">
-      {/* Glow behind card */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-600/30 to-cyan-500/20 rounded-3xl blur-2xl scale-110" />
+    <div className="relative w-full max-w-[360px]">
+      {/* Glow */}
+      <div className="absolute -inset-4 bg-gradient-to-br from-violet-600/20 to-cyan-500/15 rounded-3xl blur-3xl" />
 
-      {/* Main credential card */}
-      <div className="card-float relative glass rounded-2xl p-6 border border-white/10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">ID</span>
-            </div>
-            <span className="text-white text-sm font-semibold">ID-Night</span>
-          </div>
-          <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium">
-            ✓ Verificado
-          </span>
-        </div>
-
-        {/* User info */}
-        <div className="flex items-center gap-4 mb-5">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-800/60 to-violet-600/40 flex items-center justify-center text-2xl border border-violet-500/20">
-            👤
-          </div>
-          <div>
-            <p className="text-white font-semibold text-sm">Martín González</p>
-            <p className="text-slate-400 text-xs">+18 · DNI verificado</p>
-            <p className="text-slate-500 text-xs mt-0.5">Buenos Aires, AR</p>
-          </div>
-        </div>
-
-        {/* QR area */}
-        <div className="bg-white/5 rounded-xl p-4 flex items-center gap-4 mb-4 border border-white/5">
-          {/* Fake QR */}
-          <div className="w-14 h-14 grid grid-cols-4 gap-0.5 flex-shrink-0">
-            {Array.from({ length: 16 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-full aspect-square rounded-[1px] ${
-                  [0,1,4,5,2,7,8,10,11,13,14,15].includes(i)
-                    ? "bg-white"
-                    : "bg-transparent"
-                }`}
-              />
-            ))}
-          </div>
-          <div>
-            <p className="text-white text-xs font-medium">Credencial activa</p>
-            <p className="text-slate-500 text-xs mt-1">Válida para todos los venues adheridos</p>
-            <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: "75%" }}
-                transition={{ duration: 1.5, delay: 0.8 }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>Emitida: 15/06/2026</span>
-          <span className="text-violet-400">ID: #MGZ-4821</span>
-        </div>
-      </div>
-
-      {/* Secondary floating card — portero app */}
+      {/* Main card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="absolute -bottom-8 -right-6 glass rounded-xl p-3 border border-white/10 w-44"
-        style={{ animationDelay: "2.5s" }}
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="relative rounded-2xl overflow-hidden border border-white/10"
+        style={{ background: "linear-gradient(145deg, rgba(15,15,26,0.95), rgba(10,10,18,0.98))" }}
       >
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center">
+        {/* Card inner glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-cyan-900/10 pointer-events-none" />
+
+        {/* Top strip */}
+        <div className="h-1 w-full bg-gradient-to-r from-violet-600 via-violet-400 to-cyan-500" />
+
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <span className="text-white font-bold text-sm">ID</span>
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold leading-none">ID-Night</p>
+                <p className="text-slate-500 text-xs mt-0.5">Credencial Digital</p>
+              </div>
+            </div>
+            <motion.span
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Activa
+            </motion.span>
+          </div>
+
+          {/* User */}
+          <div className="flex items-center gap-4 mb-5 p-3 rounded-xl bg-white/4 border border-white/6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-800/80 to-violet-600/50 flex items-center justify-center text-xl border border-violet-500/20 flex-shrink-0">
+              👤
+            </div>
+            <div className="min-w-0">
+              <p className="text-white font-semibold text-sm truncate">Martín González</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded text-[10px]">+18</span>
+                <span className="text-xs text-slate-400">DNI verificado</span>
+              </div>
+              <p className="text-slate-600 text-xs mt-0.5">Buenos Aires, Argentina</p>
+            </div>
+          </div>
+
+          {/* QR */}
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-white/3 border border-white/6 mb-4">
+            <div className="w-16 h-16 p-1.5 bg-white rounded-lg flex-shrink-0">
+              <div className="w-full h-full grid" style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: "1px" }}>
+                {QR_PATTERN.map((cell, i) => (
+                  <div
+                    key={i}
+                    className="rounded-[1px]"
+                    style={{ background: cell ? "#08080F" : "transparent" }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold mb-1">Credencial activa</p>
+              <p className="text-slate-500 text-xs leading-relaxed mb-2">
+                Válida en todos los venues adheridos
+              </p>
+              <div className="h-1 w-full bg-white/8 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "78%" }}
+                  transition={{ duration: 1.8, delay: 0.6, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-600">Emitida: 15/06/2026</span>
+            <span className="text-violet-400 font-mono">#MGZ-4821</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Floating scanner chip */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute -bottom-10 -right-6 rounded-xl p-3.5 border border-white/10 w-48 shadow-2xl"
+        style={{ background: "rgba(15,15,26,0.97)" }}
+      >
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
             <span className="text-emerald-400 text-xs">✓</span>
           </div>
-          <span className="text-white text-xs font-medium">Acceso permitido</span>
+          <span className="text-white text-xs font-semibold">Acceso permitido</span>
         </div>
-        <p className="text-slate-500 text-xs">Identidad y edad confirmadas</p>
-        <div className="mt-2 text-xs text-slate-600 flex items-center gap-1">
+        <p className="text-slate-500 text-xs leading-relaxed">Identidad y edad confirmadas</p>
+        <div className="mt-2.5 flex items-center gap-1.5 text-slate-600 text-xs">
           <span>📱</span>
-          <span>App de puerta</span>
+          <span>App de puerta · hace 2s</span>
         </div>
       </motion.div>
     </div>
