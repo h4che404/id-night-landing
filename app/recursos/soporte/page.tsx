@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import {
+  buildFaqJsonLd,
+  createPageMetadata,
+  toJsonLd,
+} from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Soporte — ID-Night",
   description: "Soporte técnico, preguntas frecuentes y opciones de contacto para usuarios de ID-Night.",
-};
+  path: "/recursos/soporte",
+});
 
 const FAQS = [
   {
@@ -58,12 +64,17 @@ const CONTACT_OPTIONS = [
   },
 ];
 
+const faqJsonLd = buildFaqJsonLd(FAQS);
+
 export default function SoportePage() {
   return (
     <main className="min-h-screen pt-24 pb-20 px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(faqJsonLd) }}
+      />
       <div className="max-w-3xl mx-auto">
         <AnimatedPage>
-          {/* Header */}
           <AnimatedSection className="mb-14">
             <nav className="flex items-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
@@ -80,7 +91,6 @@ export default function SoportePage() {
             </p>
           </AnimatedSection>
 
-          {/* FAQ */}
           <AnimatedSection className="mb-14">
             <h2 className="text-xl font-semibold text-white mb-6">Problemas frecuentes</h2>
             <div className="space-y-4">
@@ -93,7 +103,6 @@ export default function SoportePage() {
             </div>
           </AnimatedSection>
 
-          {/* Contact options */}
           <AnimatedSection>
             <h2 className="text-xl font-semibold text-white mb-6">Canales de contacto</h2>
             <div className="space-y-4">

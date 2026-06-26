@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { createRootMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,11 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "ID-Night — Control de acceso para la noche",
-  description:
-    "Plataforma de control de acceso y trazabilidad para boliches, bares y eventos. Validación de identidad, revisión manual y operación desde cualquier celular.",
-};
+export const metadata: Metadata = createRootMetadata();
 
 export default function RootLayout({
   children,

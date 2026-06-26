@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import {
+  buildFaqJsonLd,
+  createPageMetadata,
+  toJsonLd,
+} from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Aprender — ID-Night",
   description: "Guía de inicio rápido y preguntas frecuentes para venues que empiezan a usar ID-Night.",
-};
+  path: "/recursos/aprender",
+});
 
 const VENUE_STEPS = [
   {
@@ -52,9 +58,15 @@ const FAQS = [
   },
 ];
 
+const faqJsonLd = buildFaqJsonLd(FAQS);
+
 export default function AprenderPage() {
   return (
     <main className="min-h-screen pt-24 pb-20 px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(faqJsonLd) }}
+      />
       <div className="max-w-3xl mx-auto">
         <AnimatedPage>
           {/* Header */}
@@ -115,7 +127,7 @@ export default function AprenderPage() {
           <AnimatedSection>
             <div className="p-6 rounded-2xl border border-white/5 bg-white/2 text-center">
               <p className="text-slate-500 text-sm">
-                📹 Videos tutoriales y documentación técnica completa próximamente.
+                Videos tutoriales y documentación técnica completa próximamente.
               </p>
               <p className="text-slate-600 text-xs mt-1">
                 ¿Necesitás ayuda ahora?{" "}

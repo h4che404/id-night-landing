@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Política de privacidad — ID-Night",
   description:
     "Política de privacidad de ID-Night. Cómo recopilamos, usamos y protegemos tus datos personales y biométricos.",
-};
+  path: "/legal/privacidad",
+});
 
 export default function PrivacidadPage() {
   return (

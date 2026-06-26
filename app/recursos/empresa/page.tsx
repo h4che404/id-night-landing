@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Empresa — ID-Night",
   description:
     "Conocé el equipo detrás de ID-Night, nuestra visión, los valores que nos guían y la hoja de ruta del producto.",
-};
+  path: "/recursos/empresa",
+});
 
 const VALUES = [
   {
@@ -89,7 +91,6 @@ export default function EmpresaPage() {
     <main className="min-h-screen pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
         <AnimatedPage>
-          {/* Header */}
           <AnimatedSection className="mb-16">
             <nav className="flex items-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
@@ -103,7 +104,6 @@ export default function EmpresaPage() {
             </h1>
           </AnimatedSection>
 
-          {/* Origin */}
           <AnimatedSection className="mb-14">
             <div className="p-8 rounded-2xl border border-white/8 bg-[#0F0F1A]">
               <h2 className="text-2xl font-bold text-white mb-4">El origen</h2>
@@ -121,7 +121,6 @@ export default function EmpresaPage() {
             </div>
           </AnimatedSection>
 
-          {/* Vision */}
           <AnimatedSection className="mb-14">
             <div className="p-8 rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-900/10 to-transparent">
               <h2 className="text-2xl font-bold text-white mb-4">Nuestra visión</h2>
@@ -131,7 +130,6 @@ export default function EmpresaPage() {
             </div>
           </AnimatedSection>
 
-          {/* Values */}
           <AnimatedSection className="mb-14">
             <h2 className="text-2xl font-bold text-white mb-8">Nuestros valores</h2>
             <div className="grid sm:grid-cols-2 gap-5">
@@ -145,7 +143,6 @@ export default function EmpresaPage() {
             </div>
           </AnimatedSection>
 
-          {/* Roadmap */}
           <AnimatedSection>
             <h2 className="text-2xl font-bold text-white mb-8">Hoja de ruta</h2>
             <div className="space-y-5">

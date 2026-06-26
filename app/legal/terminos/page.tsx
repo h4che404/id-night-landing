@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Términos y condiciones — ID-Night",
   description: "Términos y condiciones de uso del servicio ID-Night. Aplicable a usuarios finales y operadores de venues.",
-};
+  path: "/legal/terminos",
+});
 
 export default function TerminosPage() {
   return (

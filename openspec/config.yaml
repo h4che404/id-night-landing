@@ -1,0 +1,61 @@
+schema: spec-driven
+project: id-night-landing
+persistence: hybrid
+strict_tdd: false
+
+context: |
+  Tech stack: Next.js 16.2.9 App Router, React 19.2.4, TypeScript 5, Tailwind CSS 4.
+  Architecture: app/ routes compose shared components/ with mixed server/client React components.
+  Testing: No test runner configured; quality gates are ESLint and TypeScript.
+  Style: Tailwind utilities, @/* path alias, metadata in app/layout.tsx.
+  Convention: Read relevant Next.js 16 docs in node_modules/next/dist/docs/ before code changes.
+
+testing:
+  detected: 2026-06-24
+  runner:
+    available: false
+    framework: null
+    command: ""
+  layers:
+    unit: false
+    integration: false
+    e2e: false
+  coverage:
+    available: false
+    command: ""
+  quality:
+    linter:
+      available: true
+      command: npm run lint
+    typechecker:
+      available: true
+      command: npx tsc --noEmit
+    formatter:
+      available: false
+      command: ""
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Call out UX, SEO, or content impact for landing-page changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHOULD, MAY)
+  design:
+    - Document client/server component boundaries when relevant
+    - Note animation and rendering tradeoffs for interactive sections
+  tasks:
+    - Group by phase and keep tasks completable in one session
+  apply:
+    - Read relevant Next.js 16 docs in node_modules/next/dist/docs/ before implementing
+    - Follow existing App Router and shared component patterns
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: npm run build
+    lint_command: npm run lint
+    typecheck_command: npx tsc --noEmit
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

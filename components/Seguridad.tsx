@@ -9,7 +9,7 @@ const pillars = [
   { icon: "📜", title: "Trazabilidad de acciones del personal", desc: "Cada acción dentro del panel queda registrada: quién validó qué ingreso, cuándo y con qué resultado." },
   { icon: "🎯", title: "Información mínima necesaria", desc: "Solo pedimos lo indispensable para validar identidad y edad. No acumulamos datos que no necesitamos." },
   { icon: "🚫", title: "Sin decisiones automáticas irreversibles", desc: "Una credencial rechazada puede ser revisada. No hay bloqueos permanentes sin intervención humana." },
-  { icon: "🛡", title: "Sin listas negras permanentes", desc: "No generamos listas negras automáticas. Las restricciones las define el venue con criterios explícitos." },
+  { icon: "🛡", title: "Restricciones definidas por el venue", desc: "Las restricciones las define el venue con criterios explícitos y revisables." },
 ];
 
 export default function Seguridad() {

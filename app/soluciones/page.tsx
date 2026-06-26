@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Soluciones — ID-Night",
+export const metadata: Metadata = createPageMetadata({
+  title: "Soluciones de ID-Night para boliches, eventos y cadenas",
   description:
-    "Soluciones de control de acceso para boliches, eventos masivos, cadenas de venues, usuarios finales y organizadores.",
-};
+    "Control de acceso, validación de identidad y trazabilidad de incidentes para boliches, eventos masivos y cadenas de establecimientos nocturnos.",
+  path: "/soluciones",
+});
 
 const SOLUTIONS = [
   {
@@ -82,7 +84,6 @@ export default function SolucionesPage() {
     <main className="min-h-screen pt-24 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <AnimatedPage>
-          {/* Page hero */}
           <AnimatedSection className="mb-16 text-center">
             <nav className="flex items-center justify-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
@@ -97,7 +98,6 @@ export default function SolucionesPage() {
             </p>
           </AnimatedSection>
 
-          {/* Solutions */}
           {SOLUTIONS.map((solution, i) => (
             <AnimatedSection key={solution.id}>
               <section

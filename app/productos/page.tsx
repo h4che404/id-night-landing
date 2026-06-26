@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Productos — ID-Night",
+export const metadata: Metadata = createPageMetadata({
+  title: "Productos de ID-Night | Acceso, identidad y trazabilidad",
   description:
-    "Conocé todos los productos de ID-Night: app del usuario, app de puerta, panel admin, motor biométrico, credencial digital y API.",
-};
+    "App de puerta, panel del establecimiento, credencial de identidad validada y registro de incidentes. El ecosistema de control de acceso de ID-Night.",
+  path: "/productos",
+});
 
 const PRODUCTS = [
   {
@@ -79,7 +81,6 @@ export default function ProductosPage() {
     <main className="min-h-screen pt-24 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <AnimatedPage>
-          {/* Page hero */}
           <AnimatedSection className="mb-16 text-center">
             <nav className="flex items-center justify-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
@@ -94,7 +95,6 @@ export default function ProductosPage() {
             </p>
           </AnimatedSection>
 
-          {/* Products grid */}
           <AnimatedSection className="mb-20">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {PRODUCTS.map((product) => (
@@ -124,7 +124,6 @@ export default function ProductosPage() {
             </div>
           </AnimatedSection>
 
-          {/* Ecosystem diagram */}
           <AnimatedSection className="mb-20">
             <div className="p-8 rounded-2xl border border-white/8 bg-[#0F0F1A]">
               <h2 className="text-2xl font-bold text-white mb-2 text-center">El ecosistema ID-Night</h2>
@@ -149,7 +148,6 @@ export default function ProductosPage() {
             </div>
           </AnimatedSection>
 
-          {/* CTA */}
           <AnimatedSection className="text-center">
             <div className="p-10 rounded-2xl border border-white/8 bg-gradient-to-br from-violet-900/20 to-cyan-900/10">
               <h2 className="text-3xl font-bold text-white mb-3">¿Listo para probarlo?</h2>
