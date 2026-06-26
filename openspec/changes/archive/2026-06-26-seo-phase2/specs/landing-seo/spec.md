@@ -1,14 +1,11 @@
-# Landing SEO Specification
+# Delta for Landing SEO — seo-phase2
 
-## Purpose
-
-Define the SEO behavior for public landing routes so ID-Night is discoverable and shareable without making unsupported security claims.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Route metadata and social sharing
 
 The system MUST expose canonical metadata for indexable public landing routes and SHOULD provide route-specific Open Graph and Twitter fields that preserve shared defaults while reflecting each route's visible topic. The root layout MUST expose a `themeColor` matching the brand color through the Next.js `viewport` export, not through deprecated metadata fields.
+(Previously: root theme color was not required)
 
 #### Scenario: Route-specific sharing data exists
 
@@ -29,26 +26,10 @@ The system MUST expose canonical metadata for indexable public landing routes an
 - WHEN Next.js composes the document head
 - THEN a `themeColor` field is present through the viewport API and matches the brand color
 
-### Requirement: Sitemap, robots, and canonical hygiene
-
-The system MUST publish a sitemap and robots policy that reference only intended canonical public routes, and it MUST keep canonical URLs aligned with those routes.
-
-#### Scenario: Indexable routes are listed consistently
-
-- GIVEN the public landing route inventory
-- WHEN `sitemap.xml` and route canonicals are reviewed
-- THEN each intended indexable route appears once with its canonical URL
-- AND non-canonical duplicates are not introduced
-
-#### Scenario: Crawl hints remain explicit
-
-- GIVEN the robots endpoint
-- WHEN a crawler requests `robots.txt`
-- THEN the response includes the production host and sitemap URL
-
 ### Requirement: Structured data matches visible content
 
 The system MUST emit a `BreadcrumbList` JSON-LD block on every inner page and MUST emit a standalone `Organization` JSON-LD block in `app/layout.tsx`. Organization MUST contain only `@type`, `name`, and `url` — it MUST NOT include `logo`, `sameAs`, `address`, `telephone`, `email`, `foundingDate`, `description`, or any ratings/review fields. BreadcrumbList items MUST reflect the actual URL path hierarchy. All JSON-LD MUST be served at SSR time via `toJsonLd()`. Routes without visible FAQs MUST NOT emit FAQPage markup.
+(Previously: Organization and BreadcrumbList were MAY — not required; no field exclusions specified)
 
 #### Scenario: Root schema reflects visible positioning
 
@@ -77,23 +58,7 @@ The system MUST emit a `BreadcrumbList` JSON-LD block on every inner page and MU
 - THEN exactly one `Organization` JSON-LD block is present containing only `name` and `url`
 - AND no invented fields appear in the block
 
-### Requirement: SEO-safe positioning guardrails
-
-The system MUST present ID-Night as software that registers, organizes, and displays information so authorized staff can decide with more context. It MUST NOT claim autonomous decisions, total safety, zero fraud, incident elimination, automatic blocking, security staff replacement, or use blacklist or listas negras wording.
-
-#### Scenario: Metadata and schema follow approved positioning
-
-- GIVEN landing metadata, social copy, or structured data
-- WHEN positioning text is authored
-- THEN it uses operational traceability and staff-decision framing
-- AND it avoids forbidden promises and forbidden wording
-
-#### Scenario: Visible landing copy stays within guardrails
-
-- GIVEN a public landing route updated for SEO
-- WHEN the route is manually reviewed
-- THEN the copy can target nightlife access and incident-management searches
-- AND it does not overstate outcomes beyond what staff-assisted workflows support
+## ADDED Requirements
 
 ### Requirement: Heading hierarchy integrity
 
@@ -139,40 +104,25 @@ Every `<nav>` element used as a breadcrumb trail MUST carry `aria-label="Breadcr
 
 ### Requirement: Structured data contract tests
 
-`tests/seo.test.ts` MUST assert Organization JSON-LD structure, viewport `themeColor`, and manifest export shape. It MUST verify breadcrumb navigation and `BreadcrumbList` JSON-LD from server-rendered HTML for at least two representative inner pages, rather than from source-text inspection. It MUST also verify that `app/not-found.tsx` renders branded recovery navigation to the home route. Tests MUST run via `node --import tsx --test tests/seo.test.ts`.
+`tests/seo.test.ts` MUST assert: Organization JSON-LD structure (correct fields, no forbidden fields), BreadcrumbList presence for at least 2 representative inner pages, `themeColor` through the root viewport path, and manifest export shape. Tests MUST run via `node --import tsx --test tests/seo.test.ts`.
 
-#### Scenario: Rendered breadcrumb contracts pass
+#### Scenario: New contract tests pass
 
-- GIVEN representative inner pages are server-rendered for the SEO suite
-- WHEN breadcrumb assertions run
-- THEN HTML includes a breadcrumb nav labeled `Breadcrumb`
-- AND a `BreadcrumbList` JSON-LD block matching the route hierarchy
-
-#### Scenario: Branded 404 recovery contract passes
-
-- GIVEN `app/not-found.tsx` is server-rendered in the SEO suite
-- WHEN recovery assertions run
-- THEN branded navigation to the home route is present
-- AND the contract is proven from rendered output
-
-#### Scenario: SEO contract suite remains runnable
-
-- GIVEN all assertions in `tests/seo.test.ts`
+- GIVEN all tests in `tests/seo.test.ts`
 - WHEN run via `node --import tsx --test tests/seo.test.ts`
-- THEN rendered breadcrumb, 404, Organization, viewport, and manifest assertions pass
+- THEN Organization, BreadcrumbList, viewport themeColor, and manifest assertions all pass with no failures
 
-### Requirement: Generated local SEO artifacts stay out of version control
+## Technical Constraints
 
-Generated local `/.atl/` artifacts used during SEO remediation MUST be ignored by version control so they do not expand commit scope or reviewer noise.
+- Next.js 16.2.9 has breaking changes — implementer MUST read `node_modules/next/dist/docs/` before writing metadata, routing, or manifest code
+- All JSON-LD MUST use `toJsonLd()` from `lib/seo.ts` for XSS safety
+- Client components cannot export `metadata` — use the `layout.tsx` pattern for client-component pages
+- Test runner is `node:test`, not vitest
 
-#### Scenario: Generated local artifacts are excluded
+## Non-Goals
 
-- GIVEN generated files exist under `/.atl/`
-- WHEN repository status is inspected
-- THEN `.atl/` contents are excluded from candidate changes
-
-#### Scenario: Real source edits remain visible
-
-- GIVEN `/.atl/` is ignored and tracked SEO files change
-- WHEN repository status is inspected
-- THEN tracked source and test edits still appear normally
+- Core Web Vitals / performance optimization
+- FAQPage JSON-LD on additional pages
+- Per-page OG images
+- GSC verification meta tag (no token exists)
+- Any schema data not verifiable in the codebase (`sameAs`, `logo`, ratings, etc.)

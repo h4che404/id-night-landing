@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import NotFoundPage from "@/app/not-found";
 import { metadata as comoFuncionaMetadata } from "@/app/como-funciona/page";
 import { metadata as herramientasMetadata } from "@/app/herramientas/page";
 import { metadata as legalMetadata } from "@/app/legal/page";
@@ -11,21 +14,25 @@ import { metadata as terminosMetadata } from "@/app/legal/terminos/page";
 import { metadata as homeMetadata } from "@/app/page";
 import { metadata as preciosMetadata } from "@/app/precios/page";
 import { metadata as problemaMetadata } from "@/app/problema/page";
-import { metadata as aprenderMetadata } from "@/app/recursos/aprender/page";
+import AprenderPage, { metadata as aprenderMetadata } from "@/app/recursos/aprender/page";
 import { metadata as contactoMetadata } from "@/app/recursos/contacto/layout";
 import { metadata as empresaMetadata } from "@/app/recursos/empresa/page";
 import { metadata as recursosMetadata } from "@/app/recursos/page";
+import manifest from "@/app/manifest";
+import ProductosPage, { metadata as productosMetadata } from "@/app/productos/page";
 import robots from "@/app/robots";
 import { metadata as seguridadMetadata } from "@/app/seguridad/page";
 import { metadata as solucionesMetadata } from "@/app/soluciones/page";
 import sitemap from "@/app/sitemap";
-import { metadata as productosMetadata } from "@/app/productos/page";
 import { metadata as soporteMetadata } from "@/app/recursos/soporte/page";
 import {
   SITE_NAME,
+  buildBreadcrumbJsonLd,
   buildFaqJsonLd,
   buildHomePageJsonLd,
+  buildOrganizationJsonLd,
   createRootMetadata,
+  createRootViewport,
   toJsonLd,
 } from "@/lib/seo";
 
@@ -40,6 +47,8 @@ const FORBIDDEN_TERMS = [
 ];
 
 const EXPECTED_SITE_URL = "https://idnight.app";
+const EXPECTED_BRAND_COLOR = "#7C3AED";
+const EXPECTED_BACKGROUND_COLOR = "#08080F";
 const EXPECTED_ROOT_TITLE = "ID-Night | Software de control de acceso para boliches y eventos";
 const EXPECTED_ROOT_DESCRIPTION =
   "Software de control de acceso y gestión de incidentes para boliches y eventos. ID-Night registra identidad validada, accesos e incidentes para que el personal autorizado decida con más contexto.";
@@ -176,6 +185,14 @@ const EXPECTED_ROUTE_METADATA = [
 const COPY_DIRECTORIES = ["app", "components", "lib"];
 const PROJECT_ROOT = path.resolve(import.meta.dirname, "..");
 
+type RouteModule = () => ReactNode | Promise<ReactNode>;
+type JsonLdObject = { [key: string]: unknown; "@type"?: string };
+type AnchorContract = { href: string; text: string };
+
+function readProjectFile(...segments: string[]) {
+  return fs.readFileSync(path.join(PROJECT_ROOT, ...segments), "utf8");
+}
+
 function collectSourceFiles(directory: string): string[] {
   const entries = fs.readdirSync(directory, { withFileTypes: true });
 
@@ -188,6 +205,56 @@ function collectSourceFiles(directory: string): string[] {
 
     return /\.(ts|tsx)$/.test(entry.name) ? [entryPath] : [];
   });
+}
+
+function normalizeWhitespace(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function stripTags(value: string) {
+  return normalizeWhitespace(value.replace(/<[^>]+>/g, " "));
+}
+
+async function renderRoute(module: RouteModule) {
+  const renderedNode = await module();
+
+  return renderToStaticMarkup(renderedNode);
+}
+
+function extractBreadcrumbNavHtml(html: string) {
+  const match = html.match(/<nav[^>]*aria-label="Breadcrumb"[^>]*>([\s\S]*?)<\/nav>/i);
+
+  assert.notEqual(match, null, "Expected rendered breadcrumb navigation");
+
+  return match[1];
+}
+
+function extractAnchors(html: string): AnchorContract[] {
+  return Array.from(html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi), ([, attributes, innerHtml]) => {
+    const hrefMatch = attributes.match(/href="([^"]+)"/i) ?? attributes.match(/href='([^']+)'/i);
+
+    assert.notEqual(hrefMatch, null, "Expected anchor href in rendered HTML");
+
+    return {
+      href: hrefMatch[1],
+      text: stripTags(innerHtml),
+    };
+  });
+}
+
+function extractJsonLdObjects(html: string): JsonLdObject[] {
+  return Array.from(
+    html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi),
+    ([, serializedJsonLd]) => JSON.parse(serializedJsonLd) as JsonLdObject,
+  );
+}
+
+function extractJsonLdByType<T extends JsonLdObject>(html: string, schemaType: string): T {
+  const jsonLd = extractJsonLdObjects(html).find((entry) => entry["@type"] === schemaType);
+
+  assert.notEqual(jsonLd, undefined, `Expected ${schemaType} JSON-LD in rendered HTML`);
+
+  return jsonLd as T;
 }
 
 test("main metadata stays aligned with the SEO contract", () => {
@@ -302,6 +369,165 @@ test("JSON-LD helpers produce valid schema without forbidden claims", () => {
       `Forbidden SEO claim found in JSON-LD: ${forbiddenTerm}`,
     );
   }
+});
+
+test("organization JSON-LD and viewport stay aligned with the hardening contract", () => {
+  const organizationJsonLd = JSON.parse(
+    toJsonLd(buildOrganizationJsonLd()),
+  ) as Record<string, unknown>;
+  const viewport = createRootViewport();
+  const layoutSource = readProjectFile("app", "layout.tsx");
+
+  assert.deepEqual(Object.keys(organizationJsonLd).sort(), ["@context", "@type", "name", "url"]);
+  assert.equal(organizationJsonLd["@context"], "https://schema.org");
+  assert.equal(organizationJsonLd["@type"], "Organization");
+  assert.equal(organizationJsonLd.name, SITE_NAME);
+  assert.equal(organizationJsonLd.url, EXPECTED_SITE_URL);
+
+  for (const forbiddenField of [
+    "logo",
+    "sameAs",
+    "address",
+    "telephone",
+    "email",
+    "foundingDate",
+    "description",
+    "aggregateRating",
+    "review",
+  ]) {
+    assert.equal(forbiddenField in organizationJsonLd, false, `Unexpected Organization field: ${forbiddenField}`);
+  }
+
+  assert.equal(viewport.themeColor, EXPECTED_BRAND_COLOR);
+  assert.match(layoutSource, /export const viewport = createRootViewport\(\);/);
+  assert.match(layoutSource, /buildOrganizationJsonLd\(\)/);
+});
+
+test("breadcrumb JSON-LD helper stays ordered with absolute URLs", () => {
+  const breadcrumbJsonLd = JSON.parse(
+    toJsonLd(
+      buildBreadcrumbJsonLd([
+        { name: "Inicio", url: "/" },
+        { name: "Recursos", url: "/recursos" },
+        { name: "Aprender", url: "/recursos/aprender" },
+      ]),
+    ),
+  ) as {
+    [key: string]: unknown;
+    itemListElement: Array<Record<string, unknown>>;
+  };
+
+  assert.equal(breadcrumbJsonLd["@context"], "https://schema.org");
+  assert.equal(breadcrumbJsonLd["@type"], "BreadcrumbList");
+  assert.deepEqual(breadcrumbJsonLd.itemListElement, [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Inicio",
+      item: `${EXPECTED_SITE_URL}/`,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Recursos",
+      item: `${EXPECTED_SITE_URL}/recursos`,
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "Aprender",
+      item: `${EXPECTED_SITE_URL}/recursos/aprender`,
+    },
+  ]);
+});
+
+test("productos page renders breadcrumb nav and BreadcrumbList JSON-LD", async () => {
+  const html = await renderRoute(ProductosPage);
+  const breadcrumbNavHtml = extractBreadcrumbNavHtml(html);
+  const breadcrumbJsonLd = extractJsonLdByType<{
+    [key: string]: unknown;
+    itemListElement: Array<Record<string, unknown>>;
+  }>(html, "BreadcrumbList");
+
+  assert.equal(stripTags(breadcrumbNavHtml), "Inicio › Productos");
+  assert.deepEqual(extractAnchors(breadcrumbNavHtml), [{ href: "/", text: "Inicio" }]);
+  assert.deepEqual(breadcrumbJsonLd.itemListElement, [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Inicio",
+      item: `${EXPECTED_SITE_URL}/`,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Productos",
+      item: `${EXPECTED_SITE_URL}/productos`,
+    },
+  ]);
+});
+
+test("aprender page renders nested breadcrumb nav and BreadcrumbList JSON-LD", async () => {
+  const html = await renderRoute(AprenderPage);
+  const breadcrumbNavHtml = extractBreadcrumbNavHtml(html);
+  const breadcrumbJsonLd = extractJsonLdByType<{
+    [key: string]: unknown;
+    itemListElement: Array<Record<string, unknown>>;
+  }>(html, "BreadcrumbList");
+
+  assert.equal(stripTags(breadcrumbNavHtml), "Inicio › Recursos › Aprender");
+  assert.deepEqual(extractAnchors(breadcrumbNavHtml), [
+    { href: "/", text: "Inicio" },
+    { href: "/recursos", text: "Recursos" },
+  ]);
+  assert.deepEqual(breadcrumbJsonLd.itemListElement, [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Inicio",
+      item: `${EXPECTED_SITE_URL}/`,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Recursos",
+      item: `${EXPECTED_SITE_URL}/recursos`,
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: "Aprender",
+      item: `${EXPECTED_SITE_URL}/recursos/aprender`,
+    },
+  ]);
+});
+
+test("not-found page renders branded recovery copy and navigation", async () => {
+  const html = await renderRoute(NotFoundPage);
+  const renderedText = stripTags(html);
+
+  assert.match(renderedText, /404 · Página no encontrada/);
+  assert.match(renderedText, /Esta ruta no existe en ID-Night/);
+  assert.match(
+    renderedText,
+    /Volvé al inicio para seguir explorando el software de control de acceso, recursos y documentación disponible\./,
+  );
+  assert.deepEqual(extractAnchors(html), [
+    { href: "/", text: "Volver al inicio" },
+    { href: "/productos", text: "Ver productos" },
+  ]);
+});
+
+test("manifest contract exposes the required PWA fields without placeholder icons", () => {
+  const manifestValue = manifest();
+
+  assert.equal(manifestValue.name, SITE_NAME);
+  assert.equal(manifestValue.short_name, SITE_NAME);
+  assert.equal(manifestValue.start_url, "/");
+  assert.equal(manifestValue.display, "standalone");
+  assert.equal(manifestValue.background_color, EXPECTED_BACKGROUND_COLOR);
+  assert.equal(manifestValue.theme_color, EXPECTED_BRAND_COLOR);
+  assert.equal("icons" in manifestValue, false);
 });
 
 test("copy guardrail forbids unsupported claims across app copy", () => {

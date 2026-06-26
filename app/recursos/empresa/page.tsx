@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
-import { createPageMetadata } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  createPageMetadata,
+  toJsonLd,
+} from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Empresa — ID-Night",
@@ -10,6 +14,12 @@ export const metadata: Metadata = createPageMetadata({
     "Conocé el equipo detrás de ID-Night, nuestra visión, los valores que nos guían y la hoja de ruta del producto.",
   path: "/recursos/empresa",
 });
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Recursos", url: "/recursos" },
+  { name: "Empresa", url: "/recursos/empresa" },
+]);
 
 const VALUES = [
   {
@@ -89,10 +99,14 @@ const PERIOD_STYLES: Record<string, string> = {
 export default function EmpresaPage() {
   return (
     <main className="min-h-screen pt-24 pb-20 px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
       <div className="max-w-4xl mx-auto">
         <AnimatedPage>
           <AnimatedSection className="mb-16">
-            <nav className="flex items-center gap-2 text-xs text-slate-600 mb-6">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
               <span>›</span>
               <Link href="/recursos" className="hover:text-slate-400 transition-colors">Recursos</Link>

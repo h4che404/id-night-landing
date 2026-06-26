@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type DropdownItem = {
@@ -95,8 +95,10 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    setMobileOpen(false);
-    setActiveMenu(null);
+    startTransition(() => {
+      setMobileOpen(false);
+      setActiveMenu(null);
+    });
   }, [pathname]);
 
   const openMenu = (id: string) => {

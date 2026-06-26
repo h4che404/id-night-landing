@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
-import { createPageMetadata } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  createPageMetadata,
+  toJsonLd,
+} from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Soluciones de ID-Night para boliches, eventos y cadenas",
@@ -10,6 +14,11 @@ export const metadata: Metadata = createPageMetadata({
     "Control de acceso, validación de identidad y trazabilidad de incidentes para boliches, eventos masivos y cadenas de establecimientos nocturnos.",
   path: "/soluciones",
 });
+
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Soluciones", url: "/soluciones" },
+]);
 
 const SOLUTIONS = [
   {
@@ -82,10 +91,14 @@ const SOLUTIONS = [
 export default function SolucionesPage() {
   return (
     <main className="min-h-screen pt-24 pb-20 px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
       <div className="max-w-7xl mx-auto">
         <AnimatedPage>
           <AnimatedSection className="mb-16 text-center">
-            <nav className="flex items-center justify-center gap-2 text-xs text-slate-600 mb-6">
+            <nav aria-label="Breadcrumb" className="flex items-center justify-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
               <span>›</span>
               <span className="text-slate-400">Soluciones</span>

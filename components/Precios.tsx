@@ -75,7 +75,7 @@ export default function Precios() {
                   {!plan.highlight && (
                     <span className="text-xs text-slate-500 block mb-3">{plan.tag}</span>
                   )}
-                  <h3 className="text-white font-bold text-2xl mb-2">{plan.name}</h3>
+                  <h2 className="text-white font-bold text-2xl mb-2">{plan.name}</h2>
                   <p className="text-slate-400 text-xs leading-relaxed mb-6">{plan.desc}</p>
 
                   <div className="mb-6">

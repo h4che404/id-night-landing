@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
-import { createPageMetadata } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  createPageMetadata,
+  toJsonLd,
+} from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Política de privacidad — ID-Night",
@@ -11,14 +15,24 @@ export const metadata: Metadata = createPageMetadata({
   path: "/legal/privacidad",
 });
 
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+  { name: "Inicio", url: "/" },
+  { name: "Legal", url: "/legal" },
+  { name: "Política de privacidad", url: "/legal/privacidad" },
+]);
+
 export default function PrivacidadPage() {
   return (
     <main className="min-h-screen pt-24 pb-20 px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
       <div className="max-w-3xl mx-auto">
         <AnimatedPage>
           {/* Header */}
           <AnimatedSection className="mb-12">
-            <nav className="flex items-center gap-2 text-xs text-slate-600 mb-6">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
               <span>›</span>
               <Link href="/legal" className="hover:text-slate-400 transition-colors">Legal</Link>
@@ -40,7 +54,7 @@ export default function PrivacidadPage() {
               <div className="p-7 rounded-2xl border border-white/8 bg-[#0F0F1A]">
                 <h2 className="text-white text-lg font-semibold mb-4">1. Responsable del tratamiento</h2>
                 <p className="mb-3">
-                  ID-Night S.A.S. (en adelante, "la Empresa") es la responsable del tratamiento de los datos personales recopilados a través de la plataforma ID-Night, en los términos de la Ley N° 25.326 de Protección de Datos Personales de la República Argentina.
+                  ID-Night S.A.S. (en adelante, &ldquo;la Empresa&rdquo;) es la responsable del tratamiento de los datos personales recopilados a través de la plataforma ID-Night, en los términos de la Ley N° 25.326 de Protección de Datos Personales de la República Argentina.
                 </p>
                 <p>
                   La Empresa se encuentra domiciliada en la Ciudad Autónoma de Buenos Aires y puede ser contactada mediante el correo electrónico <a href="mailto:privacidad@idnight.app" className="text-violet-400 hover:text-violet-300 transition-colors">privacidad@idnight.app</a> para cualquier consulta relacionada con el tratamiento de datos.
@@ -161,7 +175,7 @@ export default function PrivacidadPage() {
                   En virtud de la Ley N° 25.326, el titular tiene derecho a acceder, rectificar, suprimir, oponerse al tratamiento y solicitar la portabilidad de sus datos personales. Estos derechos son gratuitos y pueden ejercerse en cualquier momento.
                 </p>
                 <p className="mb-3">
-                  Para ejercer cualquiera de estos derechos, el titular debe enviar una solicitud a <a href="mailto:privacidad@idnight.app" className="text-violet-400 hover:text-violet-300 transition-colors">privacidad@idnight.app</a> con el asunto "Ejercicio de derechos ARSO" y con la identificación del titular.
+                  Para ejercer cualquiera de estos derechos, el titular debe enviar una solicitud a <a href="mailto:privacidad@idnight.app" className="text-violet-400 hover:text-violet-300 transition-colors">privacidad@idnight.app</a> con el asunto &ldquo;Ejercicio de derechos ARSO&rdquo; y con la identificación del titular.
                 </p>
                 <p>
                   La Empresa responderá la solicitud en un plazo máximo de 15 días hábiles. En casos complejos, este plazo podrá extenderse hasta 30 días hábiles, lo cual será notificado al titular.

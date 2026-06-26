@@ -73,7 +73,7 @@ export default function VisualDashboard() {
 
           {/* Table rows */}
           <div className="space-y-1">
-            {TABLE_DATA.map((row, i) => {
+            {TABLE_DATA.map((row) => {
               const s = STATUS_STYLES[row.status];
               const isRevision = row.status === "revision";
               return (

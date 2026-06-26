@@ -78,7 +78,7 @@ export default function ComoFunciona() {
                         {step.tag}
                       </span>
                     </div>
-                    <h3 className="text-white font-semibold text-base mb-2 leading-snug">{step.title}</h3>
+                    <h2 className="text-white font-semibold text-base mb-2 leading-snug">{step.title}</h2>
                     <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
                   </div>
                 </div>

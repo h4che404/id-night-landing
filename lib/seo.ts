@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 export const SITE_URL = "https://idnight.app";
 export const SITE_HOST = "idnight.app";
@@ -19,10 +19,19 @@ type PageMetadataInput = {
 
 export type JsonLd = Record<string, unknown>;
 
+export type BreadcrumbItem = {
+  name: string;
+  url: string;
+};
+
 export type FaqItem = {
   q: string;
   a: string;
 };
+
+function toAbsoluteUrl(url: string) {
+  return new URL(url, SITE_URL).toString();
+}
 
 export function createRootMetadata(): Metadata {
   return {
@@ -76,6 +85,12 @@ export function createPageMetadata({
   };
 }
 
+export function createRootViewport(): Viewport {
+  return {
+    themeColor: "#7C3AED",
+  };
+}
+
 export function buildHomePageJsonLd(): JsonLd {
   return {
     "@context": "https://schema.org",
@@ -100,6 +115,28 @@ export function buildHomePageJsonLd(): JsonLd {
       name: SITE_NAME,
       url: SITE_URL,
     },
+  };
+}
+
+export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: toAbsoluteUrl(item.url),
+    })),
+  };
+}
+
+export function buildOrganizationJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
   };
 }
 

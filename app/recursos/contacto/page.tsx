@@ -33,7 +33,7 @@ export default function ContactoPage() {
         <AnimatedPage>
           {/* Header */}
           <AnimatedSection className="mb-12">
-            <nav className="flex items-center gap-2 text-xs text-slate-600 mb-6">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 mb-6">
               <Link href="/" className="hover:text-slate-400 transition-colors">Inicio</Link>
               <span>›</span>
               <Link href="/recursos" className="hover:text-slate-400 transition-colors">Recursos</Link>
