@@ -61,6 +61,7 @@ const NAV_ITEMS: NavItem[] = [
       [
         { icon: "📚", label: "Aprender", description: "Guías y tutoriales de inicio rápido", href: "/recursos/aprender" },
         { icon: "🏢", label: "Empresa", description: "Quiénes somos y nuestra visión", href: "/recursos/empresa" },
+        { icon: "👤", label: "Fundador", description: "Quién construye ID-Night", href: "/recursos/fundador" },
       ],
       [
         { icon: "🛠", label: "Soporte", description: "Ayuda técnica y preguntas frecuentes", href: "/recursos/soporte" },

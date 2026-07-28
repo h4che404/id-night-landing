@@ -11,7 +11,7 @@ import {
 export const metadata: Metadata = createPageMetadata({
   title: "Empresa — ID-Night",
   description:
-    "Conocé el equipo detrás de ID-Night, nuestra visión, los valores que nos guían y la hoja de ruta del producto.",
+    "Conocé la historia detrás de ID-Night, la visión del producto, los valores que lo guían y la hoja de ruta. Un proyecto construido por un fundador único.",
   path: "/recursos/empresa",
 });
 
@@ -52,12 +52,12 @@ const ROADMAP = [
   {
     period: "Q3 2026",
     status: "current",
-    title: "Lanzamiento en Buenos Aires",
+    title: "Lanzamiento en Mendoza",
     items: [
       "App del usuario para iOS y Android",
       "App de puerta disponible en Argentina",
       "Panel admin web para venues",
-      "Onboarding de primeros 50 venues",
+      "Onboarding de los primeros venues",
     ],
   },
   {
@@ -68,7 +68,7 @@ const ROADMAP = [
       "API pública para integraciones",
       "Credencial multi-venue con vista unificada",
       "Módulo de eventos y acreditaciones",
-      "Expansión a Córdoba, Rosario y Mendoza",
+      "Expansión a Buenos Aires, Córdoba y Rosario",
     ],
   },
   {
@@ -123,13 +123,17 @@ export default function EmpresaPage() {
               <h2 className="text-2xl font-bold text-white mb-4">El origen</h2>
               <div className="space-y-4 text-slate-400 leading-relaxed">
                 <p>
-                  ID-Night nació en Buenos Aires con un problema concreto: el control de acceso nocturno en Argentina es manual, lento y sin trazabilidad. Los porteros trabajan con listas en papel o en el celular, sin forma de verificar identidad en tiempo real, y los venues no tienen registro claro de quién entró ni cuándo.
+                  ID-Night nació en San Martín, Mendoza, de la mano de un solo fundador y un problema concreto: el control de acceso nocturno en Argentina es manual, lento y sin trazabilidad. Los porteros trabajan con listas en papel o en el celular, sin forma de verificar identidad en tiempo real, y los venues no tienen registro claro de quién entró ni cuándo.
                 </p>
                 <p>
                   La solución evidente era una plataforma de identidad verificada diseñada específicamente para el contexto nocturno argentino: sin hardware especial, que funcione con un celular básico, y que sea tan simple que un portero pueda usarla sin capacitación.
                 </p>
                 <p>
-                  Creemos que la tecnología de verificación de identidad no tiene que ser cara, compleja ni exclusiva de grandes corporaciones. Tiene que funcionar en un boliche de barrio en Villa Urquiza a las 2 de la mañana.
+                  La tecnología de verificación de identidad no tiene que ser cara, compleja ni exclusiva de grandes corporaciones. Tiene que funcionar en un boliche de barrio a las 2 de la mañana. Todo ID-Night —diseño, código y producto— lo construye una sola persona: conocé al{" "}
+                  <Link href="/recursos/fundador" className="text-violet-400 hover:text-violet-300 transition-colors">
+                    fundador
+                  </Link>
+                  .
                 </p>
               </div>
             </div>
