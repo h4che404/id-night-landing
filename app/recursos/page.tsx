@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BookOpen, Building2, MapPin, Wrench } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import BrandIcon from "@/components/BrandIcon";
 import {
   buildBreadcrumbJsonLd,
   createPageMetadata,
@@ -21,7 +23,7 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 
 const RESOURCE_CARDS = [
   {
-    icon: "📚",
+    icon: BookOpen,
     title: "Aprender",
     description:
       "Guías de inicio rápido, tutoriales paso a paso y preguntas frecuentes para empezar a usar ID-Night en tu venue en minutos.",
@@ -29,7 +31,7 @@ const RESOURCE_CARDS = [
     cta: "Ver guías →",
   },
   {
-    icon: "🏢",
+    icon: Building2,
     title: "Empresa",
     description:
       "Conocé el equipo detrás de ID-Night, nuestra misión, los valores que nos guían y la hoja de ruta del producto.",
@@ -37,7 +39,7 @@ const RESOURCE_CARDS = [
     cta: "Conocernos →",
   },
   {
-    icon: "🛠",
+    icon: Wrench,
     title: "Soporte",
     description:
       "Preguntas frecuentes técnicas, información de contacto y opciones de asistencia para resolver cualquier problema rápidamente.",
@@ -45,7 +47,7 @@ const RESOURCE_CARDS = [
     cta: "Ir al soporte →",
   },
   {
-    icon: "📍",
+    icon: MapPin,
     title: "Contacto",
     description:
       "Hablá directamente con el equipo de ID-Night para consultas comerciales, técnicas o cualquier otra pregunta que tengas.",
@@ -85,8 +87,8 @@ export default function RecursosPage() {
                   href={card.href}
                   className="group p-7 rounded-2xl border border-white/8 bg-[#0F0F1A] hover:border-violet-500/30 hover:bg-[#0F0F1A]/80 transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-900/60 to-violet-700/30 border border-violet-500/20 flex items-center justify-center text-2xl mb-5">
-                    {card.icon}
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-900/60 to-violet-700/30 border border-violet-500/20 flex items-center justify-center mb-5">
+                    <BrandIcon icon={card.icon} className="w-6 h-6" />
                   </div>
                   <h2 className="text-white font-semibold text-xl mb-2 group-hover:text-violet-300 transition-colors">
                     {card.title}

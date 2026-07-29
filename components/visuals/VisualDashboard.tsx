@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Check, Hourglass, X, type LucideIcon } from "lucide-react";
 
 const TABLE_DATA = [
   { name: "Sofía Ramírez", time: "23:41", status: "permitido" },
@@ -10,10 +11,10 @@ const TABLE_DATA = [
   { name: "Romina Acosta", time: "23:36", status: "rechazado" },
 ];
 
-const STATUS_STYLES: Record<string, { label: string; color: string; icon: string }> = {
-  permitido: { label: "Permitido", color: "text-emerald-400", icon: "✓" },
-  revision: { label: "En revisión", color: "text-yellow-400", icon: "⏳" },
-  rechazado: { label: "Rechazado", color: "text-red-400", icon: "✗" },
+const STATUS_STYLES: Record<string, { label: string; color: string; icon: LucideIcon }> = {
+  permitido: { label: "Permitido", color: "text-emerald-400", icon: Check },
+  revision: { label: "En revisión", color: "text-yellow-400", icon: Hourglass },
+  rechazado: { label: "Rechazado", color: "text-red-400", icon: X },
 };
 
 export default function VisualDashboard() {
@@ -88,7 +89,7 @@ export default function VisualDashboard() {
                   <span className="text-white text-xs truncate pr-2">{row.name}</span>
                   <span className="text-slate-500 text-xs text-center">{row.time}</span>
                   <span className={`${s.color} text-xs text-right flex items-center justify-end gap-1`}>
-                    <span>{s.icon}</span>
+                    <s.icon className="w-3.5 h-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">{s.label}</span>
                   </span>
                 </motion.div>

@@ -1,15 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { AlertTriangle, Clock, FolderOpen, IdCard, RefreshCw, UserRound } from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 import { stagger, fadeUp } from "./motion";
 
 const problems = [
-  { icon: "🕐", label: "Filas lentas en horario pico", desc: "El cuello de botella siempre es la puerta. Sin sistema, el control se vuelve caos." },
-  { icon: "🪪", label: "DNIs falsos o prestados", desc: "El ojo humano no puede verificar la autenticidad de un documento en segundos." },
-  { icon: "👤", label: "Personal tomando decisiones sin info", desc: "El portero decide solo con lo que ve. Sin contexto, sin respaldo, sin trazabilidad." },
-  { icon: "📂", label: "Sin registro de quién entró", desc: "¿Cuántas personas ingresaron anoche? ¿A qué hora? Sin sistema, no hay respuesta." },
-  { icon: "⚠️", label: "Incidentes difíciles de documentar", desc: "Cuando algo sale mal, no hay registro claro de cómo ingresó esa persona." },
-  { icon: "🔄", label: "Validaciones inconsistentes", desc: "Cada portero tiene su propio criterio. El resultado varía cada noche." },
+  { icon: Clock, label: "Filas lentas en horario pico", desc: "El cuello de botella siempre es la puerta. Sin sistema, el control se vuelve caos." },
+  { icon: IdCard, label: "DNIs falsos o prestados", desc: "El ojo humano no puede verificar la autenticidad de un documento en segundos." },
+  { icon: UserRound, label: "Personal tomando decisiones sin info", desc: "El portero decide solo con lo que ve. Sin contexto, sin respaldo, sin trazabilidad." },
+  { icon: FolderOpen, label: "Sin registro de quién entró", desc: "¿Cuántas personas ingresaron anoche? ¿A qué hora? Sin sistema, no hay respuesta." },
+  { icon: AlertTriangle, label: "Incidentes difíciles de documentar", desc: "Cuando algo sale mal, no hay registro claro de cómo ingresó esa persona." },
+  { icon: RefreshCw, label: "Validaciones inconsistentes", desc: "Cada portero tiene su propio criterio. El resultado varía cada noche." },
 ];
 
 export default function Problema() {
@@ -44,7 +46,9 @@ export default function Problema() {
                 whileHover={{ y: -3, scale: 1.01 }}
                 className="glass rounded-xl p-5 border border-white/6 hover:border-white/12 transition-colors group cursor-default"
               >
-                <div className="text-2xl mb-3.5">{item.icon}</div>
+                <div className="mb-3.5">
+                  <BrandIcon icon={item.icon} className="w-6 h-6" />
+                </div>
                 <p className="text-white text-sm font-semibold mb-2 leading-snug">{item.label}</p>
                 <p className="text-slate-500 text-xs leading-relaxed">{item.desc}</p>
               </motion.div>

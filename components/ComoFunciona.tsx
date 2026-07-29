@@ -1,12 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ClipboardList, ScanFace, Smartphone, Ticket } from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 import { stagger, fadeUp, slideRight } from "./motion";
 
 const steps = [
   {
     number: "01",
-    icon: "📲",
+    icon: Smartphone,
     title: "El usuario crea su credencial",
     desc: "Se registra en la app de ID-Night, sube foto de su DNI y una selfie. Menos de 2 minutos.",
     tag: "App del usuario",
@@ -15,7 +17,7 @@ const steps = [
   },
   {
     number: "02",
-    icon: "🔍",
+    icon: ScanFace,
     title: "ID-Night valida identidad y edad",
     desc: "El sistema compara el DNI con la selfie. Si hay dudas, pasa a revisión manual antes de emitir la credencial.",
     tag: "Motor de validación",
@@ -24,7 +26,7 @@ const steps = [
   },
   {
     number: "03",
-    icon: "🎫",
+    icon: Ticket,
     title: "El usuario obtiene su credencial digital",
     desc: "Una credencial reutilizable en todos los boliches y eventos adheridos a ID-Night.",
     tag: "Credencial digital",
@@ -33,7 +35,7 @@ const steps = [
   },
   {
     number: "04",
-    icon: "📋",
+    icon: ClipboardList,
     title: "El venue controla y registra todo",
     desc: "El portero escanea desde cualquier celular. El panel web registra accesos, revisiones e incidentes en tiempo real.",
     tag: "Panel del venue",
@@ -68,8 +70,8 @@ export default function ComoFunciona() {
                 className={`rounded-2xl p-6 bg-gradient-to-br ${step.color} border ${step.border} transition-colors group`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl flex-shrink-0">
-                    {step.icon}
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <BrandIcon icon={step.icon} className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">

@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Check, Smartphone, UserRound } from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 
 const QR_PATTERN = [1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,0,1,0,1,1,0,0,1,1,1,1,0,1,1,1,1,0,0,0,0,1,0,0,1,1,1,1,0,1,1,1,0,1];
 
@@ -47,8 +49,8 @@ export default function CredentialCard() {
 
           {/* User */}
           <div className="flex items-center gap-4 mb-5 p-3 rounded-xl bg-white/4 border border-white/6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-800/80 to-violet-600/50 flex items-center justify-center text-xl border border-violet-500/20 flex-shrink-0">
-              👤
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-800/80 to-violet-600/50 flex items-center justify-center border border-violet-500/20 flex-shrink-0">
+              <BrandIcon icon={UserRound} className="w-6 h-6" />
             </div>
             <div className="min-w-0">
               <p className="text-white font-semibold text-sm truncate">Martín González</p>
@@ -107,13 +109,13 @@ export default function CredentialCard() {
       >
         <div className="flex items-center gap-2.5 mb-2">
           <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
-            <span className="text-emerald-400 text-xs">✓</span>
+            <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
           </div>
           <span className="text-white text-xs font-semibold">Acceso permitido</span>
         </div>
         <p className="text-slate-500 text-xs leading-relaxed">Identidad y edad confirmadas</p>
         <div className="mt-2.5 flex items-center gap-1.5 text-slate-600 text-xs">
-          <span>📱</span>
+          <Smartphone className="w-3.5 h-3.5" aria-hidden="true" />
           <span>App de puerta · hace 2s</span>
         </div>
       </motion.div>

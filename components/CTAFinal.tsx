@@ -2,6 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 
 export default function CTAFinal() {
   const ref = useRef(null);
@@ -47,7 +48,7 @@ export default function CTAFinal() {
         >
           {submitted ? (
             <div className="glass rounded-2xl p-10 text-center border border-violet-500/20">
-              <div className="text-4xl mb-4">✅</div>
+              <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-4" aria-hidden="true" />
               <h3 className="text-white font-semibold text-xl mb-2">¡Listo!</h3>
               <p className="text-slate-400 text-sm">
                 Recibimos tu solicitud. Te contactamos dentro de las próximas 24 horas.

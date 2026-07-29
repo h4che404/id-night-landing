@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Lock, ScrollText } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import BrandIcon from "@/components/BrandIcon";
 import {
   buildBreadcrumbJsonLd,
   createPageMetadata,
@@ -48,7 +50,9 @@ export default function LegalPage() {
                 href="/legal/terminos"
                 className="group p-7 rounded-2xl border border-white/8 bg-[#0F0F1A] hover:border-violet-500/30 transition-all"
               >
-                <div className="text-3xl mb-4">📜</div>
+                <div className="mb-4">
+                  <BrandIcon icon={ScrollText} className="w-7 h-7" />
+                </div>
                 <h2 className="text-white font-semibold text-xl mb-2 group-hover:text-violet-300 transition-colors">
                   Términos y condiciones
                 </h2>
@@ -62,7 +66,9 @@ export default function LegalPage() {
                 href="/legal/privacidad"
                 className="group p-7 rounded-2xl border border-white/8 bg-[#0F0F1A] hover:border-violet-500/30 transition-all"
               >
-                <div className="text-3xl mb-4">🔒</div>
+                <div className="mb-4">
+                  <BrandIcon icon={Lock} className="w-7 h-7" />
+                </div>
                 <h2 className="text-white font-semibold text-xl mb-2 group-hover:text-violet-300 transition-colors">
                   Política de privacidad
                 </h2>

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 import { stagger, fadeUp, scaleIn } from "./motion";
 
 const plans = [
@@ -86,7 +87,7 @@ export default function Precios() {
                   <ul className="space-y-2.5 flex-1 mb-7">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-start gap-2 text-xs text-slate-400">
-                        <span className="text-violet-400 mt-0.5 flex-shrink-0">✓</span>
+                        <Check className="w-3.5 h-3.5 text-violet-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                         {f}
                       </li>
                     ))}

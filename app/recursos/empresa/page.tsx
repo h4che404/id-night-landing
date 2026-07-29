@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Accessibility, Handshake, Lock, ShieldCheck } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import BrandIcon from "@/components/BrandIcon";
 import {
   buildBreadcrumbJsonLd,
   createPageMetadata,
@@ -23,25 +25,25 @@ const breadcrumbJsonLd = buildBreadcrumbJsonLd([
 
 const VALUES = [
   {
-    icon: "🔐",
+    icon: Lock,
     title: "Seguridad",
     description:
       "Cada decisión de diseño del sistema está orientada a proteger tanto al venue como al usuario final. La seguridad no es una característica: es la razón de existir de ID-Night.",
   },
   {
-    icon: "🛡",
+    icon: ShieldCheck,
     title: "Privacidad",
     description:
       "Los datos biométricos nunca se comparten entre venues sin consentimiento explícito. La credencial expone solo la información necesaria para el acceso, nunca más.",
   },
   {
-    icon: "♿",
+    icon: Accessibility,
     title: "Accesibilidad",
     description:
       "El sistema tiene que funcionar para el portero de un boliche de barrio con un celular de gama media en medio de la noche. Simplicidad y robustez van de la mano.",
   },
   {
-    icon: "🤝",
+    icon: Handshake,
     title: "Confianza",
     description:
       "Entre el venue y el usuario, entre el usuario y el sistema, entre ID-Night y sus clientes. Construimos confianza siendo transparentes sobre qué datos usamos y por qué.",
@@ -153,7 +155,9 @@ export default function EmpresaPage() {
             <div className="grid sm:grid-cols-2 gap-5">
               {VALUES.map((value) => (
                 <div key={value.title} className="p-6 rounded-2xl border border-white/8 bg-[#0F0F1A]">
-                  <div className="text-3xl mb-4">{value.icon}</div>
+                  <div className="mb-4">
+                    <BrandIcon icon={value.icon} className="w-7 h-7" />
+                  </div>
                   <h3 className="text-white font-semibold text-lg mb-2">{value.title}</h3>
                   <p className="text-slate-400 text-sm leading-relaxed">{value.description}</p>
                 </div>

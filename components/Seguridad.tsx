@@ -1,15 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Ban, Eye, Lock, ScrollText, ShieldCheck, Target } from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 import { stagger, fadeUp, scaleIn } from "./motion";
 
 const pillars = [
-  { icon: "👁", title: "Revisión humana cuando hay dudas", desc: "Ninguna decisión crítica es 100% automática. La incertidumbre pasa a revisión manual antes de emitir la credencial." },
-  { icon: "🔐", title: "Datos visibles solo para personal autorizado", desc: "El venue accede únicamente a la información necesaria para operar el ingreso." },
-  { icon: "📜", title: "Trazabilidad de acciones del personal", desc: "Cada acción dentro del panel queda registrada: quién validó qué ingreso, cuándo y con qué resultado." },
-  { icon: "🎯", title: "Información mínima necesaria", desc: "Solo pedimos lo indispensable para validar identidad y edad. No acumulamos datos que no necesitamos." },
-  { icon: "🚫", title: "Sin decisiones automáticas irreversibles", desc: "Una credencial rechazada puede ser revisada. No hay bloqueos permanentes sin intervención humana." },
-  { icon: "🛡", title: "Restricciones definidas por el venue", desc: "Las restricciones las define el venue con criterios explícitos y revisables." },
+  { icon: Eye, title: "Revisión humana cuando hay dudas", desc: "Ninguna decisión crítica es 100% automática. La incertidumbre pasa a revisión manual antes de emitir la credencial." },
+  { icon: Lock, title: "Datos visibles solo para personal autorizado", desc: "El venue accede únicamente a la información necesaria para operar el ingreso." },
+  { icon: ScrollText, title: "Trazabilidad de acciones del personal", desc: "Cada acción dentro del panel queda registrada: quién validó qué ingreso, cuándo y con qué resultado." },
+  { icon: Target, title: "Información mínima necesaria", desc: "Solo pedimos lo indispensable para validar identidad y edad. No acumulamos datos que no necesitamos." },
+  { icon: Ban, title: "Sin decisiones automáticas irreversibles", desc: "Una credencial rechazada puede ser revisada. No hay bloqueos permanentes sin intervención humana." },
+  { icon: ShieldCheck, title: "Restricciones definidas por el venue", desc: "Las restricciones las define el venue con criterios explícitos y revisables." },
 ];
 
 export default function Seguridad() {
@@ -36,8 +38,8 @@ export default function Seguridad() {
             style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.06), rgba(124,58,237,0.06))" }}
           >
             <div className="flex items-start gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-600/20 to-violet-600/20 border border-cyan-500/20 flex items-center justify-center text-2xl flex-shrink-0">
-                🛡
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-600/20 to-violet-600/20 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                <BrandIcon icon={ShieldCheck} className="w-7 h-7" />
               </div>
               <div>
                 <p className="text-white font-bold text-xl mb-2 leading-snug">
@@ -58,7 +60,9 @@ export default function Seguridad() {
                 whileHover={{ y: -3, borderColor: "rgba(6,182,212,0.2)" }}
                 className="glass rounded-xl p-5 border border-white/6 transition-colors cursor-default"
               >
-                <div className="text-2xl mb-3.5">{item.icon}</div>
+                <div className="mb-3.5">
+                  <BrandIcon icon={item.icon} className="w-6 h-6" />
+                </div>
                 <p className="text-white text-sm font-semibold mb-2 leading-snug">{item.title}</p>
                 <p className="text-slate-500 text-xs leading-relaxed">{item.desc}</p>
               </motion.div>

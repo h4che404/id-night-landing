@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Meh, Smile } from "lucide-react";
 
 const STATUSES = [
   { text: "Analizando DNI...", done: false },
@@ -75,7 +76,7 @@ export default function VisualBiometrico() {
           <motion.div
             animate={{ scale: isConfirmed ? [1, 1.05, 1] : 1 }}
             transition={{ duration: 0.4 }}
-            className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center border-2 text-3xl transition-all duration-500 ${
+            className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
               isConfirmed
                 ? "bg-emerald-500/15 border-emerald-500/40"
                 : "bg-violet-500/10 border-violet-500/30"
@@ -89,7 +90,11 @@ export default function VisualBiometrico() {
                 exit={{ opacity: 0, scale: 0.6 }}
                 transition={{ duration: 0.25 }}
               >
-                {isConfirmed ? "😊" : "😐"}
+                {isConfirmed ? (
+                  <Smile className="w-7 h-7 text-emerald-400" aria-hidden="true" />
+                ) : (
+                  <Meh className="w-7 h-7 text-violet-300" aria-hidden="true" />
+                )}
               </motion.span>
             </AnimatePresence>
           </motion.div>

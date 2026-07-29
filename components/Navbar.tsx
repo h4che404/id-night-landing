@@ -1,12 +1,33 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, startTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  Building2,
+  Drama,
+  DoorOpen,
+  Lock,
+  MapPin,
+  Martini,
+  Monitor,
+  ScanFace,
+  ScrollText,
+  Settings2,
+  Smartphone,
+  Ticket,
+  Tent,
+  UserRound,
+  Wrench,
+} from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 
 type DropdownItem = {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   description: string;
   href: string;
@@ -25,14 +46,14 @@ const NAV_ITEMS: NavItem[] = [
     label: "Productos",
     columns: [
       [
-        { icon: "📱", label: "App del usuario", description: "Registrá tu identidad una sola vez", href: "/productos#app-usuario" },
-        { icon: "🚪", label: "App de puerta", description: "Control de acceso en 2 segundos", href: "/productos#app-puerta" },
-        { icon: "🖥", label: "Panel admin", description: "Gestión completa del venue", href: "/productos#panel-admin" },
+        { icon: Smartphone, label: "App del usuario", description: "Registrá tu identidad una sola vez", href: "/productos#app-usuario" },
+        { icon: DoorOpen, label: "App de puerta", description: "Control de acceso en 2 segundos", href: "/productos#app-puerta" },
+        { icon: Monitor, label: "Panel admin", description: "Gestión completa del venue", href: "/productos#panel-admin" },
       ],
       [
-        { icon: "🔍", label: "Motor biométrico", description: "Verificación facial automática", href: "/productos#biometrico" },
-        { icon: "🎫", label: "Credencial digital", description: "Identidad portable y reutilizable", href: "/productos#credencial" },
-        { icon: "⚙️", label: "API e integraciones", description: "Conectá con tu sistema actual", href: "/productos#api" },
+        { icon: ScanFace, label: "Motor biométrico", description: "Verificación facial automática", href: "/productos#biometrico" },
+        { icon: Ticket, label: "Credencial digital", description: "Identidad portable y reutilizable", href: "/productos#credencial" },
+        { icon: Settings2, label: "API e integraciones", description: "Conectá con tu sistema actual", href: "/productos#api" },
       ],
     ],
   },
@@ -41,11 +62,11 @@ const NAV_ITEMS: NavItem[] = [
     label: "Soluciones",
     columns: [
       [
-        { icon: "🍸", label: "Para boliches y bares", description: "Control de acceso nocturno simplificado", href: "/soluciones#boliches" },
-        { icon: "🎪", label: "Para eventos masivos", description: "Gestioná miles de ingresos sin caos", href: "/soluciones#eventos" },
-        { icon: "🏢", label: "Para cadenas de venues", description: "Una plataforma para múltiples locales", href: "/soluciones#cadenas" },
-        { icon: "👤", label: "Para usuarios finales", description: "Registrate una vez, entrá en todos lados", href: "/soluciones#usuarios" },
-        { icon: "🎭", label: "Para organizadores", description: "Coordiná artistas, riders y staff", href: "/soluciones#organizadores" },
+        { icon: Martini, label: "Para boliches y bares", description: "Control de acceso nocturno simplificado", href: "/soluciones#boliches" },
+        { icon: Tent, label: "Para eventos masivos", description: "Gestioná miles de ingresos sin caos", href: "/soluciones#eventos" },
+        { icon: Building2, label: "Para cadenas de venues", description: "Una plataforma para múltiples locales", href: "/soluciones#cadenas" },
+        { icon: UserRound, label: "Para usuarios finales", description: "Registrate una vez, entrá en todos lados", href: "/soluciones#usuarios" },
+        { icon: Drama, label: "Para organizadores", description: "Coordiná artistas, riders y staff", href: "/soluciones#organizadores" },
       ],
     ],
   },
@@ -59,13 +80,13 @@ const NAV_ITEMS: NavItem[] = [
     label: "Recursos",
     columns: [
       [
-        { icon: "📚", label: "Aprender", description: "Guías y tutoriales de inicio rápido", href: "/recursos/aprender" },
-        { icon: "🏢", label: "Empresa", description: "Quiénes somos y nuestra visión", href: "/recursos/empresa" },
-        { icon: "👤", label: "Fundador", description: "Quién construye ID-Night", href: "/recursos/fundador" },
+        { icon: BookOpen, label: "Aprender", description: "Guías y tutoriales de inicio rápido", href: "/recursos/aprender" },
+        { icon: Building2, label: "Empresa", description: "Quiénes somos y nuestra visión", href: "/recursos/empresa" },
+        { icon: UserRound, label: "Fundador", description: "Quién construye ID-Night", href: "/recursos/fundador" },
       ],
       [
-        { icon: "🛠", label: "Soporte", description: "Ayuda técnica y preguntas frecuentes", href: "/recursos/soporte" },
-        { icon: "📍", label: "Contacto", description: "Hablá con el equipo de ID-Night", href: "/recursos/contacto" },
+        { icon: Wrench, label: "Soporte", description: "Ayuda técnica y preguntas frecuentes", href: "/recursos/soporte" },
+        { icon: MapPin, label: "Contacto", description: "Hablá con el equipo de ID-Night", href: "/recursos/contacto" },
       ],
     ],
   },
@@ -74,8 +95,8 @@ const NAV_ITEMS: NavItem[] = [
     label: "Legal",
     columns: [
       [
-        { icon: "📜", label: "Términos y condiciones", description: "Condiciones de uso del servicio", href: "/legal/terminos" },
-        { icon: "🔒", label: "Política de privacidad", description: "Cómo protegemos tus datos", href: "/legal/privacidad" },
+        { icon: ScrollText, label: "Términos y condiciones", description: "Condiciones de uso del servicio", href: "/legal/terminos" },
+        { icon: Lock, label: "Política de privacidad", description: "Cómo protegemos tus datos", href: "/legal/privacidad" },
       ],
     ],
   },
@@ -133,9 +154,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
-            <span className="text-white font-bold text-sm">ID</span>
-          </div>
+          <Image src="/logo.png" alt="ID-Night" width={32} height={32} className="w-8 h-8 rounded-lg" priority />
           <span className="text-white font-semibold text-base tracking-tight">ID-Night</span>
         </Link>
 
@@ -206,8 +225,8 @@ export default function Navbar() {
                                 href={link.href}
                                 className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group"
                               >
-                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 text-base group-hover:bg-white/8 transition-colors">
-                                  {link.icon}
+                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/8 transition-colors">
+                                  <BrandIcon icon={link.icon} className="w-4 h-4" />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-white text-sm font-medium leading-none mb-1">
@@ -235,7 +254,7 @@ export default function Navbar() {
           href="https://admin.idnight.app"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20 flex-shrink-0"
+          className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20 flex-shrink-0"
         >
           Solicitar demo
         </a>
@@ -324,7 +343,7 @@ export default function Navbar() {
                               href={link.href}
                               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                             >
-                              <span className="text-base">{link.icon}</span>
+                              <BrandIcon icon={link.icon} className="w-4 h-4" />
                               <span>{link.label}</span>
                             </Link>
                           ))}
@@ -340,7 +359,7 @@ export default function Navbar() {
                 href="https://admin.idnight.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-sm font-semibold"
+                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white text-sm font-semibold"
               >
                 Solicitar demo
               </a>

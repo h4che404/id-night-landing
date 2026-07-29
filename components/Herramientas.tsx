@@ -2,23 +2,37 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  BarChart3,
+  ClipboardList,
+  DoorOpen,
+  Eye,
+  Lock,
+  Monitor,
+  RefreshCw,
+  Smartphone,
+  Ticket,
+  Users,
+  Zap,
+} from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 import { stagger, fadeUp } from "./motion";
 
 const venueFeatures = [
-  { icon: "📱", title: "App de puerta", desc: "El portero escanea credenciales desde cualquier celular. Sin hardware especial." },
-  { icon: "🖥", title: "Panel de administración", desc: "Dashboard web para ver accesos, gestionar personal y revisar validaciones pendientes." },
-  { icon: "👁", title: "Revisión manual integrada", desc: "Las validaciones dudosas llegan al panel para que un operador las apruebe o rechace." },
-  { icon: "📋", title: "Historial de accesos", desc: "Registro completo: quién entró, cuándo y quién lo validó." },
-  { icon: "📊", title: "Reportes operativos", desc: "Resúmenes por noche, por evento o por período. Exportables para auditoría." },
-  { icon: "👥", title: "Gestión de personal", desc: "Controlá qué operador accede a qué función dentro del panel." },
+  { icon: Smartphone, title: "App de puerta", desc: "El portero escanea credenciales desde cualquier celular. Sin hardware especial." },
+  { icon: Monitor, title: "Panel de administración", desc: "Dashboard web para ver accesos, gestionar personal y revisar validaciones pendientes." },
+  { icon: Eye, title: "Revisión manual integrada", desc: "Las validaciones dudosas llegan al panel para que un operador las apruebe o rechace." },
+  { icon: ClipboardList, title: "Historial de accesos", desc: "Registro completo: quién entró, cuándo y quién lo validó." },
+  { icon: BarChart3, title: "Reportes operativos", desc: "Resúmenes por noche, por evento o por período. Exportables para auditoría." },
+  { icon: Users, title: "Gestión de personal", desc: "Controlá qué operador accede a qué función dentro del panel." },
 ];
 
 const userFeatures = [
-  { icon: "🎫", title: "Credencial digital", desc: "Una sola credencial verificada para todos los boliches y eventos adheridos." },
-  { icon: "⚡", title: "Validación previa al ingreso", desc: "Verificás tu identidad una vez. Cada ingreso siguiente tarda segundos." },
-  { icon: "🚪", title: "Menos fricción al entrar", desc: "Sin sacar el DNI, sin esperar al portero, sin fricciones innecesarias." },
-  { icon: "🔒", title: "Control de tus datos", desc: "Podés ver qué información tiene ID-Night sobre vos y solicitar su eliminación." },
-  { icon: "🔄", title: "Reutilizable", desc: "La misma credencial funciona en cualquier venue adherido, sin registrarte de nuevo." },
+  { icon: Ticket, title: "Credencial digital", desc: "Una sola credencial verificada para todos los boliches y eventos adheridos." },
+  { icon: Zap, title: "Validación previa al ingreso", desc: "Verificás tu identidad una vez. Cada ingreso siguiente tarda segundos." },
+  { icon: DoorOpen, title: "Menos fricción al entrar", desc: "Sin sacar el DNI, sin esperar al portero, sin fricciones innecesarias." },
+  { icon: Lock, title: "Control de tus datos", desc: "Podés ver qué información tiene ID-Night sobre vos y solicitar su eliminación." },
+  { icon: RefreshCw, title: "Reutilizable", desc: "La misma credencial funciona en cualquier venue adherido, sin registrarte de nuevo." },
 ];
 
 const TABS = [
@@ -92,7 +106,9 @@ export default function Herramientas() {
                     whileHover={{ y: -3, scale: 1.01 }}
                     className="glass rounded-xl p-5 border border-white/6 hover:border-white/12 transition-colors cursor-default"
                   >
-                    <div className="text-2xl mb-3.5">{feature.icon}</div>
+                    <div className="mb-3.5">
+                      <BrandIcon icon={feature.icon} className="w-6 h-6" />
+                    </div>
                     <p className="text-white text-sm font-semibold mb-2">{feature.title}</p>
                     <p className="text-slate-500 text-xs leading-relaxed">{feature.desc}</p>
                   </motion.div>

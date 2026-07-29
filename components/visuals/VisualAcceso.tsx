@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { BatteryFull, Check } from "lucide-react";
 
 const RECENT_ENTRIES = [
   { name: "Laura Martínez", time: "23:41" },
@@ -39,7 +40,7 @@ export default function VisualAcceso() {
         {/* Status bar */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <span className="text-white text-xs font-semibold">23:42</span>
-          <span className="text-white text-xs">🔋</span>
+          <BatteryFull className="w-3.5 h-3.5 text-white" aria-hidden="true" />
         </div>
 
         <div className="px-4 pb-6">
@@ -89,7 +90,7 @@ export default function VisualAcceso() {
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white/3 border border-white/5"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 text-xs">✓</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
                   <span className="text-white text-xs">{entry.name}</span>
                 </div>
                 <span className="text-slate-600 text-[10px]">{entry.time}</span>
@@ -108,7 +109,7 @@ export default function VisualAcceso() {
                 transition={{ duration: 0.25 }}
                 className="py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center gap-2"
               >
-                <span className="text-emerald-400 text-sm">✓</span>
+                <Check className="w-4 h-4 text-emerald-400" aria-hidden="true" />
                 <span className="text-emerald-400 text-sm font-semibold">Acceso confirmado</span>
               </motion.div>
             ) : (

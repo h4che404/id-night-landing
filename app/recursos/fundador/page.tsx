@@ -1,5 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Atom,
+  Braces,
+  CalendarDays,
+  GraduationCap,
+  Layers,
+  Mail,
+  MapPin,
+  Search,
+  Sparkles,
+  Wind,
+  Zap,
+} from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
 import {
@@ -60,34 +74,34 @@ const personJsonLd = {
 
 const QUICK_FACTS = [
   {
-    icon: "🎓",
+    icon: GraduationCap,
     label: "Formación",
     value: "Tecnicatura Universitaria en Programación — UTN",
   },
   {
-    icon: "📍",
+    icon: MapPin,
     label: "Ubicación",
     value: "San Martín, Mendoza — Argentina",
   },
   {
-    icon: "🗓",
+    icon: CalendarDays,
     label: "Edad",
     value: `${currentYear - FOUNDER.bornYear} años (nacido en ${FOUNDER.bornYear})`,
   },
   {
-    icon: "⚡",
+    icon: Zap,
     label: "Rol",
     value: "Diseño, desarrollo y producto — de punta a punta",
   },
 ];
 
 const STACK = [
-  { name: "Next.js 16", note: "App Router y renderizado server-first" },
-  { name: "React 19", note: "Componentes y UI reactiva" },
-  { name: "TypeScript", note: "Tipado estricto en todo el código" },
-  { name: "Tailwind CSS", note: "Sistema de diseño y estilos" },
-  { name: "Framer Motion", note: "Animaciones y transiciones" },
-  { name: "SEO técnico", note: "Metadata, JSON-LD y performance" },
+  { name: "Next.js 16", note: "App Router y renderizado server-first", icon: Layers },
+  { name: "React 19", note: "Componentes y UI reactiva", icon: Atom },
+  { name: "TypeScript", note: "Tipado estricto en todo el código", icon: Braces },
+  { name: "Tailwind CSS", note: "Sistema de diseño y estilos", icon: Wind },
+  { name: "Framer Motion", note: "Animaciones y transiciones", icon: Sparkles },
+  { name: "SEO técnico", note: "Metadata, JSON-LD y performance", icon: Search },
 ];
 
 const PRINCIPLES = [
@@ -194,25 +208,34 @@ export default function FundadorPage() {
           <AnimatedSection className="mb-14">
             <h2 className="text-2xl font-bold text-white mb-8">En breve</h2>
             <div className="grid sm:grid-cols-2 gap-5">
-              {QUICK_FACTS.map((fact) => (
-                <div key={fact.label} className="p-6 rounded-2xl border border-white/8 bg-[#0F0F1A]">
-                  <div className="text-3xl mb-3">{fact.icon}</div>
-                  <h3 className="text-slate-500 text-xs uppercase tracking-wider mb-1.5">{fact.label}</h3>
-                  <p className="text-white font-medium leading-relaxed">{fact.value}</p>
-                </div>
-              ))}
+              {QUICK_FACTS.map((fact) => {
+                const Icon = fact.icon;
+                return (
+                  <div key={fact.label} className="p-6 rounded-2xl border border-white/8 bg-[#0F0F1A]">
+                    <div className="w-11 h-11 rounded-xl border border-violet-500/20 bg-violet-500/10 flex items-center justify-center mb-4">
+                      <Icon className="w-5 h-5 text-violet-400" strokeWidth={1.75} aria-hidden="true" />
+                    </div>
+                    <h3 className="text-slate-500 text-xs uppercase tracking-wider mb-1.5">{fact.label}</h3>
+                    <p className="text-white font-medium leading-relaxed">{fact.value}</p>
+                  </div>
+                );
+              })}
             </div>
           </AnimatedSection>
 
           <AnimatedSection className="mb-14">
             <h2 className="text-2xl font-bold text-white mb-8">Stack técnico</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {STACK.map((tech) => (
-                <div key={tech.name} className="p-5 rounded-2xl border border-white/8 bg-[#0F0F1A]">
-                  <h3 className="text-white font-semibold mb-1">{tech.name}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{tech.note}</p>
-                </div>
-              ))}
+              {STACK.map((tech) => {
+                const Icon = tech.icon;
+                return (
+                  <div key={tech.name} className="p-5 rounded-2xl border border-white/8 bg-[#0F0F1A]">
+                    <Icon className="w-6 h-6 text-violet-400 mb-3" strokeWidth={1.75} aria-hidden="true" />
+                    <h3 className="text-white font-semibold mb-1">{tech.name}</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">{tech.note}</p>
+                  </div>
+                );
+              })}
             </div>
           </AnimatedSection>
 
@@ -240,15 +263,17 @@ export default function FundadorPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <a
                   href={`mailto:${FOUNDER.email}`}
-                  className="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors"
                 >
+                  <Mail className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                   Escribirme
                 </a>
                 <Link
                   href="/recursos/contacto"
-                  className="px-6 py-3 rounded-xl border border-white/10 hover:border-white/20 text-slate-300 font-medium transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/10 hover:border-white/20 text-slate-300 font-medium transition-colors"
                 >
                   Ir a contacto
+                  <ArrowRight className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
                 </Link>
               </div>
             </div>

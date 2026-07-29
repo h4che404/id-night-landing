@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const FOOTER_COLS = [
@@ -48,9 +49,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                <span className="text-white font-bold text-sm">ID</span>
-              </div>
+              <Image src="/logo.png" alt="ID-Night" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-white font-semibold text-base tracking-tight">ID-Night</span>
             </Link>
             <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-4">

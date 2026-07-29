@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Mail, MapPin, MessageCircle } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
+import BrandIcon from "@/components/BrandIcon";
 import {
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
@@ -40,7 +42,7 @@ const FAQS = [
 
 const CONTACT_OPTIONS = [
   {
-    icon: "💬",
+    icon: MessageCircle,
     channel: "WhatsApp",
     detail: "+54 9 11 0000-0000",
     response: "Respuesta en menos de 2 horas en horario hábil",
@@ -48,7 +50,7 @@ const CONTACT_OPTIONS = [
     external: true,
   },
   {
-    icon: "📧",
+    icon: Mail,
     channel: "Email",
     detail: "soporte@idnight.app",
     response: "Respuesta en menos de 24 horas",
@@ -56,7 +58,7 @@ const CONTACT_OPTIONS = [
     external: true,
   },
   {
-    icon: "📍",
+    icon: MapPin,
     channel: "Formulario de contacto",
     detail: "Completá el formulario y te contactamos",
     response: "Te respondemos según prioridad del caso",
@@ -119,8 +121,8 @@ export default function SoportePage() {
               {CONTACT_OPTIONS.map((option) => {
                 const content = (
                   <div className="flex items-start gap-4 p-5 rounded-xl border border-white/8 bg-[#0F0F1A] hover:border-violet-500/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-violet-900/40 border border-violet-500/20 flex items-center justify-center text-xl flex-shrink-0">
-                      {option.icon}
+                    <div className="w-10 h-10 rounded-xl bg-violet-900/40 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                      <BrandIcon icon={option.icon} className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-white font-medium text-sm group-hover:text-violet-300 transition-colors">

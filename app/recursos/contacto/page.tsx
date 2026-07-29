@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
 
@@ -52,8 +53,8 @@ export default function ContactoPage() {
           <AnimatedSection>
             {submitted ? (
               <div className="p-10 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-3xl mx-auto mb-5">
-                  ✓
+                <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mx-auto mb-5">
+                  <Check className="w-8 h-8 text-emerald-400" aria-hidden="true" />
                 </div>
                 <h2 className="text-white text-xl font-semibold mb-2">¡Mensaje enviado!</h2>
                 <p className="text-slate-400 text-sm leading-relaxed mb-6">

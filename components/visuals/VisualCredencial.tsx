@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Check, UserRound } from "lucide-react";
+import BrandIcon from "@/components/BrandIcon";
 
 const QR_PATTERN = [
   [1, 1, 1, 1, 1, 1, 1],
@@ -54,8 +56,8 @@ export default function VisualCredencial() {
 
           {/* User row */}
           <div className="flex items-center gap-4 mb-5 p-3 rounded-xl bg-white/4 border border-white/6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-800/80 to-violet-600/50 flex items-center justify-center text-xl border border-violet-500/20 flex-shrink-0">
-              👤
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-800/80 to-violet-600/50 flex items-center justify-center border border-violet-500/20 flex-shrink-0">
+              <BrandIcon icon={UserRound} className="w-6 h-6" />
             </div>
             <div className="min-w-0">
               <p className="text-white font-semibold text-sm">Martín González</p>
@@ -120,7 +122,7 @@ export default function VisualCredencial() {
       >
         <div className="flex items-center gap-2 mb-1">
           <div className="w-5 h-5 rounded-md bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
-            <span className="text-emerald-400 text-[10px]">✓</span>
+            <Check className="w-3 h-3 text-emerald-400" aria-hidden="true" />
           </div>
           <span className="text-white text-xs font-semibold whitespace-nowrap">Acceso permitido</span>
         </div>
