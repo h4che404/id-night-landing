@@ -151,7 +151,7 @@ const EXPECTED_ROUTE_METADATA = [
     path: "/recursos/empresa",
     title: "Empresa — ID-Night",
     description:
-      "Conocé el equipo detrás de ID-Night, nuestra visión, los valores que nos guían y la hoja de ruta del producto.",
+      "Conocé la historia detrás de ID-Night, la visión del producto, los valores que lo guían y la hoja de ruta. Un proyecto construido por un fundador único.",
     metadata: empresaMetadata,
   },
   {
@@ -378,14 +378,14 @@ test("organization JSON-LD and viewport stay aligned with the hardening contract
   const viewport = createRootViewport();
   const layoutSource = readProjectFile("app", "layout.tsx");
 
-  assert.deepEqual(Object.keys(organizationJsonLd).sort(), ["@context", "@type", "name", "url"]);
+  assert.deepEqual(Object.keys(organizationJsonLd).sort(), ["@context", "@type", "logo", "name", "url"]);
   assert.equal(organizationJsonLd["@context"], "https://schema.org");
   assert.equal(organizationJsonLd["@type"], "Organization");
   assert.equal(organizationJsonLd.name, SITE_NAME);
   assert.equal(organizationJsonLd.url, EXPECTED_SITE_URL);
+  assert.equal(organizationJsonLd.logo, `${EXPECTED_SITE_URL}/icon-512.png`);
 
   for (const forbiddenField of [
-    "logo",
     "sameAs",
     "address",
     "telephone",
@@ -518,7 +518,7 @@ test("not-found page renders branded recovery copy and navigation", async () => 
   ]);
 });
 
-test("manifest contract exposes the required PWA fields without placeholder icons", () => {
+test("manifest contract exposes the required PWA fields with real brand icons", () => {
   const manifestValue = manifest();
 
   assert.equal(manifestValue.name, SITE_NAME);
@@ -527,7 +527,17 @@ test("manifest contract exposes the required PWA fields without placeholder icon
   assert.equal(manifestValue.display, "standalone");
   assert.equal(manifestValue.background_color, EXPECTED_BACKGROUND_COLOR);
   assert.equal(manifestValue.theme_color, EXPECTED_BRAND_COLOR);
-  assert.equal("icons" in manifestValue, false);
+  assert.deepEqual(manifestValue.icons, [
+    { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+    { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    { src: "/icon-192-maskable.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+    { src: "/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+  ]);
+
+  for (const icon of manifestValue.icons ?? []) {
+    const iconPath = path.join(PROJECT_ROOT, "public", path.basename(icon.src as string));
+    assert.equal(fs.existsSync(iconPath), true, `Missing served asset for manifest icon: ${icon.src}`);
+  }
 });
 
 test("copy guardrail forbids unsupported claims across app copy", () => {
