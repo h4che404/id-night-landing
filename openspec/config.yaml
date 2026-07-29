@@ -1,23 +1,25 @@
 schema: spec-driven
 project: id-night-landing
 persistence: hybrid
-strict_tdd: false
+strict_tdd: true
 
 context: |
   Tech stack: Next.js 16.2.9 App Router, React 19.2.4, TypeScript 5, Tailwind CSS 4.
   Architecture: app/ routes compose shared components/ with mixed server/client React components.
-  Testing: No test runner configured; quality gates are ESLint and TypeScript.
+  Testing: node:test (via tsx loader) runs tests/seo.test.ts, covering metadata/SEO/JSON-LD contracts
+    and static-rendered copy/anchors (react-dom/server). No jsdom/testing-library/visual-regression
+    runner exists, so pure visual asset swaps (icons, logos, styling) are not automatically testable.
   Style: Tailwind utilities, @/* path alias, metadata in app/layout.tsx.
   Convention: Read relevant Next.js 16 docs in node_modules/next/dist/docs/ before code changes.
 
 testing:
-  detected: 2026-06-24
+  detected: 2026-07-28
   runner:
-    available: false
-    framework: null
-    command: ""
+    available: true
+    framework: "node:test (built-in) via tsx loader"
+    command: "npm test"
   layers:
-    unit: false
+    unit: true
     integration: false
     e2e: false
   coverage:
@@ -49,10 +51,16 @@ rules:
   apply:
     - Read relevant Next.js 16 docs in node_modules/next/dist/docs/ before implementing
     - Follow existing App Router and shared component patterns
-    tdd: false
-    test_command: ""
+    - Strict TDD applies to testable surfaces (metadata/SEO/JSON-LD, static-rendered copy and
+      anchors in tests/seo.test.ts) — extend or write a failing node:test case before implementing,
+      then make it pass, then refactor.
+    - Pure visual/presentational changes (icon or logo swaps, styling-only tweaks) have no
+      automated test harness; verify manually and note this limitation instead of claiming
+      test coverage that does not exist.
+    tdd: true
+    test_command: "npm test"
   verify:
-    test_command: ""
+    test_command: "npm test"
     build_command: npm run build
     lint_command: npm run lint
     typecheck_command: npx tsc --noEmit
