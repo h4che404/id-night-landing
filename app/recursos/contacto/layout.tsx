@@ -8,7 +8,7 @@ import {
 export const metadata: Metadata = createPageMetadata({
   title: "Contacto — ID-Night",
   description:
-    "Hablá con el equipo de ID-Night. Solicitá una demo o consultá cómo implementar control de acceso y trazabilidad en tu boliche o evento.",
+    "Conocé el estado de lanzamiento de ID-Night y escribinos por consultas generales sobre la idea y la marca.",
   path: "/recursos/contacto",
 });
 

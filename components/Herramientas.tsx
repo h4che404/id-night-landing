@@ -118,14 +118,12 @@ export default function Herramientas() {
           </AnimatePresence>
 
           <motion.div variants={fadeUp} className="mt-10">
-            <a
-              href="https://admin.idnight.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20"
+            <span
+              aria-disabled="true"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-violet-500/20 cursor-not-allowed opacity-80"
             >
-              Solicitar acceso al panel
-            </a>
+              PRÓXIMAMENTE
+            </span>
           </motion.div>
         </motion.div>
       </div>

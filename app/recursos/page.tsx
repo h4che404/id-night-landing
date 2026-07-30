@@ -26,7 +26,7 @@ const RESOURCE_CARDS = [
     icon: BookOpen,
     title: "Aprender",
     description:
-      "Guías de inicio rápido, tutoriales paso a paso y preguntas frecuentes para empezar a usar ID-Night en tu venue en minutos.",
+      "Conocé el flujo previsto del producto y las preguntas frecuentes antes de su lanzamiento.",
     href: "/recursos/aprender",
     cta: "Ver guías →",
   },
@@ -42,7 +42,7 @@ const RESOURCE_CARDS = [
     icon: Wrench,
     title: "Soporte",
     description:
-      "Preguntas frecuentes técnicas, información de contacto y opciones de asistencia para resolver cualquier problema rápidamente.",
+      "Consultá el estado del futuro canal de asistencia y la información disponible antes del lanzamiento.",
     href: "/recursos/soporte",
     cta: "Ir al soporte →",
   },

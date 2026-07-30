@@ -173,18 +173,16 @@ export default function ProductosPage() {
 
           <AnimatedSection className="text-center">
             <div className="p-10 rounded-2xl border border-white/8 bg-gradient-to-br from-violet-900/20 to-cyan-900/10">
-              <h2 className="text-3xl font-bold text-white mb-3">¿Listo para probarlo?</h2>
+              <h2 className="text-3xl font-bold text-white mb-3">Conocé lo que estamos construyendo</h2>
               <p className="text-slate-400 mb-7 max-w-md mx-auto">
-                Registrá tu venue y empezá a usar ID-Night esta misma semana.
+                El acceso al producto y las demos se habilitarán cuando ID-Night esté listo para su lanzamiento.
               </p>
-              <a
-                href="https://admin.idnight.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold hover:opacity-90 transition-opacity shadow-xl shadow-violet-500/25"
+              <span
+                aria-disabled="true"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold shadow-xl shadow-violet-500/25 cursor-not-allowed opacity-80"
               >
-                Solicitar demo
-              </a>
+                PRÓXIMAMENTE
+              </span>
             </div>
           </AnimatedSection>
         </AnimatedPage>

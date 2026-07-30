@@ -57,15 +57,13 @@ export default function Problema() {
 
           {/* CTA inline */}
           <motion.div variants={fadeUp} className="mt-12 flex items-center gap-4">
-            <a
-              href="https://admin.idnight.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20"
+            <span
+              aria-disabled="true"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-violet-500/20 cursor-not-allowed opacity-80"
             >
-              Solicitar demo
-            </a>
-            <span className="text-slate-500 text-sm">y mostramos cómo lo resolvemos →</span>
+              PRÓXIMAMENTE
+            </span>
+            <span className="text-slate-500 text-sm">La demo estará disponible en el lanzamiento.</span>
           </motion.div>
         </motion.div>
       </div>

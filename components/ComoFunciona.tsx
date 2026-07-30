@@ -94,14 +94,12 @@ export default function ComoFunciona() {
                 <p className="text-white font-semibold text-sm mb-1">Para el venue</p>
                 <p className="text-slate-400 text-sm">Sin hardware. Sin capacitación larga. El portero usa su celular, el dueño ve todo desde el panel web.</p>
               </div>
-              <a
-                href="https://admin.idnight.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20 text-center"
+              <span
+                aria-disabled="true"
+                className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-violet-500/20 text-center cursor-not-allowed opacity-80"
               >
-                Empezar ahora
-              </a>
+                PRÓXIMAMENTE
+              </span>
             </div>
           </motion.div>
         </motion.div>

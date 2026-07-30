@@ -250,14 +250,12 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop CTA */}
-        <a
-          href="https://admin.idnight.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20 flex-shrink-0"
+        <span
+          aria-disabled="true"
+          className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white shadow-lg shadow-violet-500/20 flex-shrink-0 cursor-not-allowed opacity-80"
         >
-          Solicitar demo
-        </a>
+          PRÓXIMAMENTE
+        </span>
 
         {/* Mobile hamburger */}
         <button
@@ -355,14 +353,12 @@ export default function Navbar() {
               );
             })}
             <div className="pt-2">
-              <a
-                href="https://admin.idnight.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white text-sm font-semibold"
+              <span
+                aria-disabled="true"
+                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-brand-cyan to-brand-violet text-white text-sm font-semibold cursor-not-allowed opacity-80"
               >
-                Solicitar demo
-              </a>
+                PRÓXIMAMENTE
+              </span>
             </div>
           </motion.div>
         )}

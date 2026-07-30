@@ -1,78 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
 import AnimatedPage from "@/components/AnimatedPage";
 import AnimatedSection from "@/components/AnimatedSection";
 import BrandIcon from "@/components/BrandIcon";
 import {
   buildBreadcrumbJsonLd,
-  buildFaqJsonLd,
   createPageMetadata,
   toJsonLd,
 } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Soporte — ID-Night",
-  description: "Soporte técnico, preguntas frecuentes y opciones de contacto para usuarios de ID-Night.",
+  description: "El soporte técnico de ID-Night estará disponible cuando se habilite el servicio. Consultá mientras tanto la información pública del producto.",
   path: "/recursos/soporte",
 });
-
-const FAQS = [
-  {
-    q: "La app de puerta no escanea el QR correctamente. ¿Qué hago?",
-    a: "Verificá que el brillo de la pantalla del usuario esté al máximo. La cámara necesita buena iluminación. Si el problema persiste, probá cerrar y reabrir la app. Si sigue fallando, el usuario puede mostrar el código manual y el portero puede ingresarlo desde el panel.",
-  },
-  {
-    q: "¿Cómo recupero el acceso al panel admin si olvidé la contraseña?",
-    a: "Usá el botón 'Olvidé mi contraseña' en la pantalla de login de admin.idnight.app. Te llegará un correo con un link para resetearla. Si el correo no llega en 5 minutos, revisá la carpeta de spam.",
-  },
-  {
-    q: "Un usuario dice que su credencial fue rechazada pero debería estar activa.",
-    a: "Verificá el estado de la credencial desde el panel admin buscando por nombre o DNI. Los rechazos pueden deberse a credencial suspendida, vencida o a una validación biométrica pendiente. Si el estado es correcto y el rechazo no tiene sentido, contactá a soporte con el ID del acceso.",
-  },
-  {
-    q: "¿Cómo agrego un nuevo portero al sistema?",
-    a: "Desde el panel admin, ve a Configuración → Personal de acceso → Agregar portero. Ingresá su email y asignale los permisos correspondientes. El portero recibirá un email de invitación para crear su contraseña en la App de puerta.",
-  },
-  {
-    q: "¿El sistema funciona sin conexión a internet?",
-    a: "ID-Night requiere conexión a internet para validar credenciales en tiempo real. Sin conexión, no es posible verificar el estado actualizado de una credencial. Recomendamos tener una conexión de respaldo (datos móviles) en los puntos de acceso.",
-  },
-];
-
-const CONTACT_OPTIONS = [
-  {
-    icon: MessageCircle,
-    channel: "WhatsApp",
-    detail: "+54 9 11 0000-0000",
-    response: "Respuesta en menos de 2 horas en horario hábil",
-    href: "https://wa.me/5491100000000",
-    external: true,
-  },
-  {
-    icon: Mail,
-    channel: "Email",
-    detail: "soporte@idnight.app",
-    response: "Respuesta en menos de 24 horas",
-    href: "mailto:soporte@idnight.app",
-    external: true,
-  },
-  {
-    icon: MapPin,
-    channel: "Formulario de contacto",
-    detail: "Completá el formulario y te contactamos",
-    response: "Te respondemos según prioridad del caso",
-    href: "/recursos/contacto",
-    external: false,
-  },
-];
 
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([
   { name: "Inicio", url: "/" },
   { name: "Recursos", url: "/recursos" },
   { name: "Soporte", url: "/recursos/soporte" },
 ]);
-const faqJsonLd = buildFaqJsonLd(FAQS);
 
 export default function SoportePage() {
   return (
@@ -80,10 +28,6 @@ export default function SoportePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: toJsonLd(faqJsonLd) }}
       />
       <div className="max-w-3xl mx-auto">
         <AnimatedPage>
@@ -99,51 +43,26 @@ export default function SoportePage() {
               <span className="gradient-text">Soporte</span> técnico
             </h1>
             <p className="text-slate-400 leading-relaxed">
-              Encontrá respuestas a los problemas más comunes o contactá al equipo directamente.
+              El canal de asistencia se habilitará junto con el acceso al producto.
             </p>
           </AnimatedSection>
 
-          <AnimatedSection className="mb-14">
-            <h2 className="text-xl font-semibold text-white mb-6">Problemas frecuentes</h2>
-            <div className="space-y-4">
-              {FAQS.map((faq) => (
-                <div key={faq.q} className="p-5 rounded-xl border border-white/8 bg-[#0F0F1A]">
-                  <p className="text-white font-medium text-sm mb-2">{faq.q}</p>
-                  <p className="text-slate-400 text-sm leading-relaxed">{faq.a}</p>
-                </div>
-              ))}
-            </div>
-          </AnimatedSection>
-
           <AnimatedSection>
-            <h2 className="text-xl font-semibold text-white mb-6">Canales de contacto</h2>
-            <div className="space-y-4">
-              {CONTACT_OPTIONS.map((option) => {
-                const content = (
-                  <div className="flex items-start gap-4 p-5 rounded-xl border border-white/8 bg-[#0F0F1A] hover:border-violet-500/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-violet-900/40 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
-                      <BrandIcon icon={option.icon} className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm group-hover:text-violet-300 transition-colors">
-                        {option.channel}
-                      </p>
-                      <p className="text-violet-400 text-sm mt-0.5">{option.detail}</p>
-                      <p className="text-slate-500 text-xs mt-1">{option.response}</p>
-                    </div>
-                  </div>
-                );
-
-                return option.external ? (
-                  <a key={option.channel} href={option.href} target="_blank" rel="noopener noreferrer">
-                    {content}
-                  </a>
-                ) : (
-                  <Link key={option.channel} href={option.href}>
-                    {content}
-                  </Link>
-                );
-              })}
+            <div className="p-8 sm:p-10 rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-900/20 to-cyan-900/10 text-center">
+              <span className="inline-flex px-3.5 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300 text-xs font-semibold mb-5">
+                PRÓXIMAMENTE
+              </span>
+              <h2 className="text-xl font-semibold text-white mb-3">Asistencia en preparación</h2>
+              <p className="text-slate-400 text-sm leading-relaxed mb-7">
+                Todavía no hay cuentas operativas que requieran soporte. Cuando lancemos el servicio, este espacio concentrará la documentación y los canales de asistencia.
+              </p>
+              <a
+                href="mailto:hola@idnight.app"
+                className="inline-flex items-center gap-2 text-violet-300 text-sm hover:text-violet-200 transition-colors"
+              >
+                <BrandIcon icon={Mail} className="w-4 h-4" />
+                Consulta general
+              </a>
             </div>
           </AnimatedSection>
         </AnimatedPage>

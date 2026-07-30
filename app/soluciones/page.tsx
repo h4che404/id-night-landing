@@ -180,14 +180,12 @@ export default function SolucionesPage() {
                   ))}
                 </div>
 
-                <a
-                  href="https://admin.idnight.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                <span
+                  aria-disabled="true"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-sm font-semibold cursor-not-allowed opacity-80"
                 >
-                  Solicitar demo para {solution.title.toLowerCase().replace("para ", "")}
-                </a>
+                  PRÓXIMAMENTE
+                </span>
               </section>
             </AnimatedSection>
           ))}

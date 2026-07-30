@@ -12,7 +12,7 @@ import { metadata as legalMetadata } from "@/app/legal/page";
 import { metadata as privacidadMetadata } from "@/app/legal/privacidad/page";
 import { metadata as terminosMetadata } from "@/app/legal/terminos/page";
 import { metadata as homeMetadata } from "@/app/page";
-import { metadata as preciosMetadata } from "@/app/precios/page";
+import PreciosPage, { metadata as preciosMetadata } from "@/app/precios/page";
 import { metadata as problemaMetadata } from "@/app/problema/page";
 import AprenderPage, { metadata as aprenderMetadata } from "@/app/recursos/aprender/page";
 import { metadata as contactoMetadata } from "@/app/recursos/contacto/layout";
@@ -22,7 +22,7 @@ import manifest from "@/app/manifest";
 import ProductosPage, { metadata as productosMetadata } from "@/app/productos/page";
 import robots from "@/app/robots";
 import { metadata as seguridadMetadata } from "@/app/seguridad/page";
-import { metadata as solucionesMetadata } from "@/app/soluciones/page";
+import SolucionesPage, { metadata as solucionesMetadata } from "@/app/soluciones/page";
 import sitemap from "@/app/sitemap";
 import { metadata as soporteMetadata } from "@/app/recursos/soporte/page";
 import {
@@ -103,21 +103,21 @@ const EXPECTED_ROUTE_METADATA = [
     path: "/recursos/aprender",
     title: "Aprender — ID-Night",
     description:
-      "Guía de inicio rápido y preguntas frecuentes para venues que empiezan a usar ID-Night.",
+      "Conocé el flujo previsto de ID-Night y las preguntas frecuentes para venues antes del lanzamiento.",
     metadata: aprenderMetadata,
   },
   {
     path: "/recursos/soporte",
     title: "Soporte — ID-Night",
     description:
-      "Soporte técnico, preguntas frecuentes y opciones de contacto para usuarios de ID-Night.",
+      "El soporte técnico de ID-Night estará disponible cuando se habilite el servicio. Consultá mientras tanto la información pública del producto.",
     metadata: soporteMetadata,
   },
   {
     path: "/precios",
-    title: "Precios de ID-Night | Pilotos para boliches y eventos",
+    title: "Planes de ID-Night | Próximamente",
     description:
-      "Conocé cómo iniciar un piloto de ID-Night para validar identidad, controlar accesos y registrar incidentes en boliches y eventos.",
+      "Conocé los planes previstos de ID-Night. Los precios, demos y contrataciones estarán disponibles cuando se habilite el servicio.",
     metadata: preciosMetadata,
   },
   {
@@ -158,7 +158,7 @@ const EXPECTED_ROUTE_METADATA = [
     path: "/recursos/contacto",
     title: "Contacto — ID-Night",
     description:
-      "Hablá con el equipo de ID-Night. Solicitá una demo o consultá cómo implementar control de acceso y trazabilidad en tu boliche o evento.",
+      "Conocé el estado de lanzamiento de ID-Night y escribinos por consultas generales sobre la idea y la marca.",
     metadata: contactoMetadata,
   },
   {
@@ -224,7 +224,7 @@ async function renderRoute(module: RouteModule) {
 function extractBreadcrumbNavHtml(html: string) {
   const match = html.match(/<nav[^>]*aria-label="Breadcrumb"[^>]*>([\s\S]*?)<\/nav>/i);
 
-  assert.notEqual(match, null, "Expected rendered breadcrumb navigation");
+  assert(match, "Expected rendered breadcrumb navigation");
 
   return match[1];
 }
@@ -233,7 +233,7 @@ function extractAnchors(html: string): AnchorContract[] {
   return Array.from(html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi), ([, attributes, innerHtml]) => {
     const hrefMatch = attributes.match(/href="([^"]+)"/i) ?? attributes.match(/href='([^']+)'/i);
 
-    assert.notEqual(hrefMatch, null, "Expected anchor href in rendered HTML");
+    assert(hrefMatch, "Expected anchor href in rendered HTML");
 
     return {
       href: hrefMatch[1],
@@ -555,5 +555,43 @@ test("copy guardrail forbids unsupported claims across app copy", () => {
         `Forbidden copy term found in ${path.relative(PROJECT_ROOT, sourceFile)}: ${forbiddenTerm}`,
       );
     }
+  }
+});
+
+test("pre-launch commercial routes show unavailable status without service destinations", async () => {
+  for (const route of [ProductosPage, SolucionesPage, PreciosPage, AprenderPage]) {
+    const html = await renderRoute(route);
+
+    assert.match(stripTags(html), /PRÓXIMAMENTE/);
+    assert.equal(
+      extractAnchors(html).some(({ href }) => href.includes("admin.idnight.app")),
+      false,
+    );
+  }
+});
+
+test("pre-launch CTA surfaces cannot navigate to the unavailable service", () => {
+  const surfaceFiles = [
+    ["components", "Navbar.tsx"],
+    ["components", "Hero.tsx"],
+    ["components", "Problema.tsx"],
+    ["components", "ComoFunciona.tsx"],
+    ["components", "Herramientas.tsx"],
+    ["components", "Precios.tsx"],
+    ["components", "CTAFinal.tsx"],
+    ["app", "productos", "page.tsx"],
+    ["app", "soluciones", "page.tsx"],
+    ["app", "recursos", "aprender", "page.tsx"],
+    ["app", "recursos", "contacto", "page.tsx"],
+    ["app", "recursos", "soporte", "page.tsx"],
+  ];
+
+  for (const segments of surfaceFiles) {
+    const source = readProjectFile(...segments);
+    const relativePath = segments.join("/");
+
+    assert.match(source, /PRÓXIMAMENTE/, `Missing pre-launch status in ${relativePath}`);
+    assert.doesNotMatch(source, /https:\/\/admin\.idnight\.app/, `Service destination found in ${relativePath}`);
+    assert.doesNotMatch(source, /href=["']#["']/, `Fake link found in ${relativePath}`);
   }
 });

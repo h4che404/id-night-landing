@@ -11,28 +11,28 @@ import {
 
 export const metadata: Metadata = createPageMetadata({
   title: "Aprender — ID-Night",
-  description: "Guía de inicio rápido y preguntas frecuentes para venues que empiezan a usar ID-Night.",
+  description: "Conocé el flujo previsto de ID-Night y las preguntas frecuentes para venues antes del lanzamiento.",
   path: "/recursos/aprender",
 });
 
 const VENUE_STEPS = [
   {
     step: "1",
-    title: "Registrá tu venue",
+    title: "Creá el perfil de tu venue",
     description:
-      "Ingresá a admin.idnight.app y creá tu cuenta de venue. Completá los datos del local (nombre, dirección, tipo de establecimiento) y configurá los accesos. El proceso tarda menos de 10 minutos.",
+      "Cuando se habilite el servicio, vas a poder crear el perfil de tu venue, completar los datos del establecimiento y preparar sus accesos.",
   },
   {
     step: "2",
     title: "Configurá los puntos de acceso",
     description:
-      "Desde el panel admin, definí cuántos puntos de entrada tiene tu venue y asigná las credenciales de acceso para el personal de puerta. Cada portero descarga la App de puerta y se loguea con su usuario.",
+      "El panel permitirá definir los puntos de entrada y asignar permisos al personal autorizado para operar la App de puerta.",
   },
   {
     step: "3",
-    title: "Empezá a validar ingresos",
+    title: "Validá los ingresos",
     description:
-      "Los usuarios que ya tienen la credencial ID-Night simplemente muestran el QR al portero. Los que no, pueden registrarse en el momento desde su celular. El sistema valida en segundos y el registro queda en el panel.",
+      "La experiencia prevista permitirá presentar la credencial digital, validar el ingreso y dejar trazabilidad en el panel del venue.",
   },
 ];
 
@@ -92,8 +92,11 @@ export default function AprenderPage() {
               Inicio rápido para <span className="gradient-text">venues</span>
             </h1>
             <p className="text-slate-400 leading-relaxed">
-              En 3 pasos tu venue puede empezar a usar ID-Night. Sin hardware, sin capacitación larga, sin complicaciones.
+              Así será el flujo de puesta en marcha cuando ID-Night habilite el acceso para venues.
             </p>
+            <span className="inline-flex mt-5 px-3.5 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-300 text-xs font-semibold">
+              PRÓXIMAMENTE
+            </span>
           </AnimatedSection>
 
           {/* Quick start steps */}

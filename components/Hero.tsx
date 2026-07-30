@@ -180,14 +180,12 @@ export default function Hero() {
 
           {/* CTAs */}
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
-            <a
-              href="https://admin.idnight.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-xl shadow-violet-500/25 text-center"
+            <span
+              aria-disabled="true"
+              className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white font-semibold text-sm shadow-xl shadow-violet-500/25 text-center cursor-not-allowed opacity-80"
             >
-              Solicitar demo
-            </a>
+              PRÓXIMAMENTE
+            </span>
             <Link
               href="/productos"
               className="px-7 py-3.5 rounded-xl glass text-white font-medium text-sm hover:bg-white/8 transition-all text-center border border-white/8"

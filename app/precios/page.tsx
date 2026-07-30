@@ -3,9 +3,9 @@ import Precios from "@/components/Precios";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Precios de ID-Night | Pilotos para boliches y eventos",
+  title: "Planes de ID-Night | Próximamente",
   description:
-    "Conocé cómo iniciar un piloto de ID-Night para validar identidad, controlar accesos y registrar incidentes en boliches y eventos.",
+    "Conocé los planes previstos de ID-Night. Los precios, demos y contrataciones estarán disponibles cuando se habilite el servicio.",
   path: "/precios",
 });
 
