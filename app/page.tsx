@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Hero from "@/components/Hero";
+import HomePage from "@/components/home/HomePage";
 import {
   buildHomePageJsonLd,
   createPageMetadata,
@@ -23,7 +23,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(homePageJsonLd) }}
       />
-      <Hero />
+      <HomePage />
     </>
   );
 }

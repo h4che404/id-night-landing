@@ -1,15 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import { homepageContent } from "@/components/home/homepage-content";
 
 export const SITE_URL = "https://idnight.app";
 export const SITE_HOST = "idnight.app";
 export const SITE_NAME = "ID-Night";
-export const ROOT_TITLE = "ID-Night | Software de control de acceso para boliches y eventos";
+export const ROOT_TITLE = "ID-NIGHT | Construyendo una noche más segura";
 export const ROOT_DESCRIPTION =
-  "Software de control de acceso y gestión de incidentes para boliches y eventos. ID-Night registra identidad validada, accesos e incidentes para que el personal autorizado decida con más contexto.";
-export const SOCIAL_IMAGE_ALT =
-  "ID-Night, software de control de acceso y gestión de incidentes para boliches y eventos";
+  "ID-NIGHT es una iniciativa tecnológica nacida en Mendoza que trabaja junto con quienes salen, organizan, trabajan y cuidan para construir una nocturnidad más segura, responsable y respetuosa de la privacidad.";
+export const SOCIAL_IMAGE_ALT = "ID-NIGHT, iniciativa tecnológica en desarrollo para construir una noche más segura desde Mendoza";
 export const DEFAULT_OG_IMAGE = "/opengraph-image";
 export const DEFAULT_TWITTER_IMAGE = "/twitter-image";
+const SHARED_OG_IMAGES = [{ url: DEFAULT_OG_IMAGE, alt: SOCIAL_IMAGE_ALT }];
+const SHARED_TWITTER_IMAGES = [{ url: DEFAULT_TWITTER_IMAGE, alt: SOCIAL_IMAGE_ALT }];
 
 type PageMetadataInput = {
   title: string;
@@ -47,13 +49,13 @@ export function createRootMetadata(): Metadata {
       url: "/",
       title: ROOT_TITLE,
       description: ROOT_DESCRIPTION,
-      images: [{ url: DEFAULT_OG_IMAGE, alt: SOCIAL_IMAGE_ALT }],
+      images: SHARED_OG_IMAGES,
     },
     twitter: {
       card: "summary_large_image",
       title: ROOT_TITLE,
       description: ROOT_DESCRIPTION,
-      images: [DEFAULT_TWITTER_IMAGE],
+      images: SHARED_TWITTER_IMAGES,
     },
   };
 }
@@ -74,13 +76,13 @@ export function createPageMetadata({
       url: path,
       title,
       description,
-      images: [{ url: DEFAULT_OG_IMAGE, alt: SOCIAL_IMAGE_ALT }],
+      images: SHARED_OG_IMAGES,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [DEFAULT_TWITTER_IMAGE],
+      images: SHARED_TWITTER_IMAGES,
     },
   };
 }
@@ -94,27 +96,25 @@ export function createRootViewport(): Viewport {
 export function buildHomePageJsonLd(): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: SITE_NAME,
+    "@type": "WebPage",
+    name: ROOT_TITLE,
     url: SITE_URL,
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "iOS, Android, Web",
     description: ROOT_DESCRIPTION,
-    audience: [
-      { "@type": "Audience", audienceType: "Boliches y bares" },
-      { "@type": "Audience", audienceType: "Eventos y productoras" },
-    ],
-    featureList: [
-      "Credencial digital verificada para boliches, bares y eventos",
-      "Validación de ingresos desde celulares autorizados",
-      "Historial de accesos con trazabilidad",
-      "Registro de incidentes para el establecimiento",
-    ],
-    provider: {
-      "@type": "Organization",
+    inLanguage: "es-AR",
+    abstract: homepageContent.hero.status,
+    isPartOf: {
+      "@type": "WebSite",
       name: SITE_NAME,
       url: SITE_URL,
     },
+    about: [
+      { "@type": "Thing", name: "Mendoza, Argentina" },
+      { "@type": "Thing", name: "Iniciativa tecnológica en desarrollo" },
+      {
+        "@type": "Thing",
+        name: "Identidad, accesos, decisiones e incidentes con privacidad y criterio humano",
+      },
+    ],
   };
 }
 
@@ -137,7 +137,6 @@ export function buildOrganizationJsonLd(): JsonLd {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/icon-512.png`,
   };
 }
 

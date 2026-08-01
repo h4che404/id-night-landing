@@ -3,14 +3,21 @@ import Link from "next/link";
 
 const FOOTER_COLS = [
   {
+    title: "Homepage",
+    links: [
+      { label: "Visión", href: "/#vision" },
+      { label: "Qué creemos", href: "/#principios" },
+      { label: "Tecnología", href: "/productos" },
+      { label: "Participar", href: "/#participar" },
+    ],
+  },
+  {
     title: "Productos",
     links: [
+      { label: "Visión general", href: "/productos" },
       { label: "App del usuario", href: "/productos#app-usuario" },
-      { label: "App de puerta", href: "/productos#app-puerta" },
       { label: "Panel admin", href: "/productos#panel-admin" },
       { label: "Motor biométrico", href: "/productos#biometrico" },
-      { label: "Credencial digital", href: "/productos#credencial" },
-      { label: "API e integraciones", href: "/productos#api" },
     ],
   },
   {
@@ -19,8 +26,6 @@ const FOOTER_COLS = [
       { label: "Para boliches y bares", href: "/soluciones#boliches" },
       { label: "Para eventos masivos", href: "/soluciones#eventos" },
       { label: "Para cadenas de venues", href: "/soluciones#cadenas" },
-      { label: "Para usuarios finales", href: "/soluciones#usuarios" },
-      { label: "Para organizadores", href: "/soluciones#organizadores" },
     ],
   },
   {
@@ -28,34 +33,37 @@ const FOOTER_COLS = [
     links: [
       { label: "Aprender", href: "/recursos/aprender" },
       { label: "Empresa", href: "/recursos/empresa" },
+      { label: "Fundador", href: "/recursos/fundador" },
       { label: "Soporte", href: "/recursos/soporte" },
-      { label: "Contacto", href: "/recursos/contacto" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Términos y condiciones", href: "/legal/terminos" },
       { label: "Política de privacidad", href: "/legal/privacidad" },
+      { label: "Términos y condiciones", href: "/legal/terminos" },
+      { label: "Contacto", href: "/recursos/contacto" },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/5 pt-14 pb-8 px-6">
+    <footer className="border-t border-white/8 bg-[linear-gradient(180deg,rgba(9,13,24,0.96),rgba(4,8,18,1))] px-6 pb-8 pt-14">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
+        <div className="mb-12 grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-7">
           {/* Brand column */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-2">
+          <div className="col-span-2 md:col-span-3 lg:col-span-3">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
               <Image src="/logo.png" alt="ID-Night" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-white font-semibold text-base tracking-tight">ID-Night</span>
             </Link>
-            <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-4">
-              La plataforma de identidad verificada para el control de acceso nocturno en Argentina.
+            <p className="mb-4 max-w-md text-sm leading-relaxed text-slate-300">
+              Desde Mendoza, construyendo una nocturnidad más segura, humana y respetuosa de la privacidad.
             </p>
-            <p className="text-slate-700 text-xs">© 2026 ID-Night. Todos los derechos reservados.</p>
+            <p className="max-w-md text-sm leading-relaxed text-slate-400">
+              ID-NIGHT está en etapa de conversación y construcción junto con quienes salen, organizan, trabajan y cuidan la noche.
+            </p>
           </div>
 
           {/* Nav columns */}
@@ -67,7 +75,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-slate-500 text-sm hover:text-slate-300 transition-colors"
+                      className="text-sm text-slate-400 transition-colors hover:text-slate-200"
                     >
                       {link.label}
                     </Link>
@@ -79,18 +87,21 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-slate-600 text-xs">
-            Desarrollado en Buenos Aires, Argentina 🇦🇷
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-white/8 pt-6 sm:flex-row">
+          <p className="text-xs text-slate-500">
+            © 2026 ID-Night. Construido en Argentina con foco en claridad operativa, criterio humano y privacidad.
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-600">
-            <Link href="/legal/privacidad" className="hover:text-slate-400 transition-colors">
+          <div className="flex items-center gap-4 text-xs text-slate-500">
+            <Link href="/legal/privacidad" className="transition-colors hover:text-slate-300">
               Privacidad
             </Link>
-            <Link href="/legal/terminos" className="hover:text-slate-400 transition-colors">
+            <Link href="/legal/terminos" className="transition-colors hover:text-slate-300">
               Términos
             </Link>
-            <Link href="/recursos/contacto" className="hover:text-slate-400 transition-colors">
+            <Link href="/#participar" className="transition-colors hover:text-slate-300">
+              Participar
+            </Link>
+            <Link href="/recursos/contacto" className="transition-colors hover:text-slate-300">
               Contacto
             </Link>
           </div>

@@ -1,12 +1,10 @@
 import { ImageResponse } from "next/og";
 import { BRAND_GRADIENT_CSS } from "@/lib/brand";
 
-export const alt = "ID-Night — Software de control de acceso y gestión de incidentes para boliches y eventos";
+export const alt = "ID-NIGHT, iniciativa tecnológica en desarrollo para construir una noche más segura desde Mendoza";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Imagen Open Graph / Twitter compartida por todo el sitio.
-// Refleja la identidad visual: fondo oscuro + escudo en el gradiente de marca (BRAND_GRADIENT_CSS).
 export default function OpengraphImage() {
   return new ImageResponse(
     (
@@ -40,24 +38,27 @@ export default function OpengraphImage() {
               />
             </svg>
           </div>
-          <div style={{ color: "white", fontSize: "42px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-            ID-Night
+          <div style={{ color: "white", fontSize: "42px", fontWeight: 700, letterSpacing: "0.12em" }}>
+            ID-NIGHT
           </div>
         </div>
         <div
           style={{
             color: "white",
-            fontSize: "62px",
+            fontSize: "64px",
             fontWeight: 800,
             lineHeight: 1.08,
             letterSpacing: "-0.02em",
             maxWidth: "1000px",
           }}
         >
-          Software de control de acceso y gestión de incidentes para boliches y eventos
+          Construyendo una noche más segura
         </div>
         <div style={{ color: "#94a3b8", fontSize: "32px", marginTop: "36px" }}>
-          Identidad validada · Trazabilidad · Decisiones con más contexto
+          Iniciativa tecnológica en desarrollo desde Mendoza
+        </div>
+        <div style={{ color: "#cbd5e1", fontSize: "26px", marginTop: "18px", maxWidth: "920px" }}>
+          Privacidad · criterio humano · mejores herramientas para organizar, decidir y comprender
         </div>
       </div>
     ),

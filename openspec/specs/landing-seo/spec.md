@@ -8,14 +8,14 @@ Define the SEO behavior for public landing routes so ID-Night is discoverable an
 
 ### Requirement: Route metadata and social sharing
 
-The system MUST expose canonical metadata for indexable public landing routes and SHOULD provide route-specific Open Graph and Twitter fields that preserve shared defaults while reflecting each route's visible topic. The root layout MUST expose a `themeColor` matching the brand color through the Next.js `viewport` export, not through deprecated metadata fields.
+The system MUST expose canonical metadata for indexable public landing routes and SHOULD provide route-specific Open Graph and Twitter fields that preserve shared defaults while reflecting each route's visible topic. For `/`, the exact title MUST be `ID-NIGHT | Construyendo una noche más segura` and the exact description MUST be `ID-NIGHT es una iniciativa tecnológica nacida en Mendoza que trabaja junto con quienes salen, organizan, trabajan y cuidan para construir una nocturnidad más segura, responsable y respetuosa de la privacidad.`. Canonical, Open Graph, and Twitter fields for `/` MUST align with that same positioning, MUST remain consistent with the visible homepage H1 and narrative, and MUST NOT claim deployments, customers, results, or surveillance. The root layout MUST expose a `themeColor` matching the brand color through the Next.js `viewport` export, not through deprecated metadata fields.
 
 #### Scenario: Route-specific sharing data exists
 
 - GIVEN a public landing route such as `/`, `/productos`, or `/recursos/aprender`
 - WHEN its metadata is generated
 - THEN the route includes a canonical URL for itself
-- AND Open Graph/Twitter title or description matches the visible route topic without dropping shared site defaults
+- AND homepage metadata matches the approved institutional title/description while secondary routes keep their visible topic
 
 #### Scenario: Shared social defaults stay intact
 
@@ -48,13 +48,14 @@ The system MUST publish a sitemap and robots policy that reference only intended
 
 ### Requirement: Structured data matches visible content
 
-The system MUST emit a `BreadcrumbList` JSON-LD block on every inner page and MUST emit a standalone `Organization` JSON-LD block in `app/layout.tsx`. Organization MUST contain only `@type`, `name`, and `url` — it MUST NOT include `logo`, `sameAs`, `address`, `telephone`, `email`, `foundingDate`, `description`, or any ratings/review fields. BreadcrumbList items MUST reflect the actual URL path hierarchy. All JSON-LD MUST be served at SSR time via `toJsonLd()`. Routes without visible FAQs MUST NOT emit FAQPage markup.
+The system MUST emit a `BreadcrumbList` JSON-LD block on every inner page and MUST emit a standalone `Organization` JSON-LD block in `app/layout.tsx`. Organization MUST contain only `@type`, `name`, and `url` and MUST NOT include invented profile, contact, founder, customer, or location fields. The homepage route MUST emit one route-level JSON-LD block whose title, description, current-stage language, and capability framing match the visible homepage brief, including Mendoza origin, in-development stage, privacy-first positioning, and the approved technology scope. BreadcrumbList items MUST reflect the actual URL path hierarchy. All JSON-LD MUST be served at SSR time via `toJsonLd()`. Routes without visible FAQs MUST NOT emit FAQPage markup.
 
 #### Scenario: Root schema reflects visible positioning
 
 - GIVEN the home page rendered to the user
 - WHEN JSON-LD is emitted for the route
-- THEN schema fields describe the same product, audience, and capabilities shown on the page
+- THEN schema fields describe the same narrative, stage, and capability limits shown on the page
+- AND the route-level schema avoids fabricated proof, founder facts, contact numbers, or rollout claims
 
 #### Scenario: FAQ schema is limited to visible FAQs
 
@@ -79,21 +80,21 @@ The system MUST emit a `BreadcrumbList` JSON-LD block on every inner page and MU
 
 ### Requirement: SEO-safe positioning guardrails
 
-The system MUST present ID-Night as software that registers, organizes, and displays information so authorized staff can decide with more context. It MUST NOT claim autonomous decisions, total safety, zero fraud, incident elimination, automatic blocking, security staff replacement, or use blacklist or listas negras wording.
+The system MUST present `/` as an institutional invitation organized around WHY first, HOW second, WHAT later, and INVITATION last. Homepage SEO surfaces MUST stay aligned with the approved visible H1, preserve natural discoverability for access-control software on technology and secondary routes, include functional internal links to approved destinations such as the technology route and privacy route, and use truthful image alt text where metadata or content exposes it. The system MUST NOT claim guarantees, total control, dangerous-person detection, surveillance marketing, invented statistics, testimonials, customers, alliances, pilots, government implementations, results, autonomous decisions, or security-staff replacement.
 
 #### Scenario: Metadata and schema follow approved positioning
 
 - GIVEN landing metadata, social copy, or structured data
 - WHEN positioning text is authored
-- THEN it uses operational traceability and staff-decision framing
-- AND it avoids forbidden promises and forbidden wording
+- THEN `/` follows the institutional narrative while secondary routes keep operational software framing
+- AND forbidden promises, invented proof, and surveillance wording are absent
 
 #### Scenario: Visible landing copy stays within guardrails
 
 - GIVEN a public landing route updated for SEO
 - WHEN the route is manually reviewed
-- THEN the copy can target nightlife access and incident-management searches
-- AND it does not overstate outcomes beyond what staff-assisted workflows support
+- THEN the homepage, H1, internal links, and exposed alt text stay aligned with the approved brief
+- AND no page overstates maturity beyond staff-assisted, in-development workflows
 
 ### Requirement: Heading hierarchy integrity
 
