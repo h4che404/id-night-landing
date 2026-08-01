@@ -607,6 +607,31 @@ test("homepage primary navigation does not include a dead PRÓXIMAMENTE control"
   assert.doesNotMatch(navbarSource, /aria-disabled="true"/, "Desktop primary navigation must not render disabled CTA chrome");
 });
 
+test("desktop navigation exposes one accessible Explore mega-menu with verified destinations", () => {
+  const navbarSource = readProjectFile("components", "Navbar.tsx");
+
+  for (const category of ["Idea y propósito", "Ecosistema", "Soluciones y recursos", "Legal"]) {
+    assert.match(navbarSource, new RegExp(escapeRegExp(category)));
+  }
+  for (const href of [
+    "/#vision", "/#problema", "/#principios", "/#actores", "/#etapa", "/#tecnologia", "/#fundador",
+    "/productos", "/productos#app-usuario", "/productos#app-puerta", "/productos#panel-admin", "/productos#biometrico", "/productos#credencial", "/productos#api",
+    "/soluciones", "/soluciones#boliches", "/soluciones#eventos", "/soluciones#cadenas", "/soluciones#usuarios", "/soluciones#organizadores",
+    "/precios", "/recursos", "/recursos/aprender", "/recursos/empresa", "/recursos/fundador", "/recursos/soporte", "/recursos/contacto",
+    "/legal/privacidad", "/legal/terminos",
+  ]) {
+    assert.match(navbarSource, new RegExp(`href: ["']${escapeRegExp(href)}["']`), `Missing verified navigation destination: ${href}`);
+  }
+
+  assert.match(navbarSource, />\s*Explorar\s*</);
+  assert.match(navbarSource, /aria-expanded=\{desktopOpen\}/);
+  assert.match(navbarSource, /aria-controls=\{DESKTOP_MENU_ID\}/);
+  assert.match(navbarSource, /event\.key !== "ArrowDown"/);
+  assert.match(navbarSource, /document\.addEventListener\("pointerdown"/);
+  assert.match(navbarSource, /if \(!event\.currentTarget\.contains\(event\.relatedTarget\)\) closeDesktopMenu\(\)/);
+  assert.equal((navbarSource.match(/>\s*Explorar\s*</g) ?? []).length, 1, "Desktop navigation must keep one Explore trigger");
+});
+
 test("pre-launch CTA surfaces cannot navigate to the unavailable service", () => {
   const surfaceFiles = [
     ["components", "Hero.tsx"],
@@ -826,6 +851,7 @@ test("homepage motion isolates client behavior and honors reduced-motion and lif
   assert.match(navbarSource, /event\.key === "Escape"/);
   assert.match(navbarSource, /event\.key !== "Tab"/);
   assert.match(navbarSource, /!href\.includes\("#"\)/);
+  assert.match(navbarSource, /transition=\{\{ duration: reduceMotion \? 0/);
 });
 
 test("footer keeps priority homepage access while preserving secondary routes", () => {

@@ -7,28 +7,51 @@ import { usePathname } from "next/navigation";
 import { startTransition, useEffect, useRef, useState } from "react";
 
 const MOBILE_MENU_ID = "site-mobile-menu";
+const DESKTOP_MENU_ID = "site-explore-menu";
 const DESKTOP_NAV_ITEMS = [
   { label: "Por qué", href: "/#problema" },
   { label: "Cómo", href: "/#tecnologia" },
 ] as const;
-const MOBILE_GROUPS = [
+const EXPLORE_GROUPS = [
   {
-    label: "La iniciativa",
+    label: "Idea y propósito",
     links: [
       { label: "Visión", href: "/#vision" },
       { label: "El problema", href: "/#problema" },
       { label: "Qué creemos", href: "/#principios" },
+      { label: "A quiénes escuchamos", href: "/#actores" },
+      { label: "Etapa actual", href: "/#etapa" },
       { label: "Tecnología", href: "/#tecnologia" },
       { label: "Fundador", href: "/#fundador" },
     ],
   },
   {
-    label: "Explorar",
+    label: "Ecosistema",
     links: [
-      { label: "Productos", href: "/productos" },
-      { label: "Soluciones", href: "/soluciones" },
+      { label: "Todos los productos", href: "/productos" },
+      { label: "App del usuario", href: "/productos#app-usuario" },
+      { label: "App de puerta", href: "/productos#app-puerta" },
+      { label: "Panel admin", href: "/productos#panel-admin" },
+      { label: "Motor biométrico", href: "/productos#biometrico" },
+      { label: "Credencial digital", href: "/productos#credencial" },
+      { label: "API e integraciones", href: "/productos#api" },
+    ],
+  },
+  {
+    label: "Soluciones y recursos",
+    links: [
+      { label: "Todas las soluciones", href: "/soluciones" },
+      { label: "Boliches y bares", href: "/soluciones#boliches" },
+      { label: "Eventos masivos", href: "/soluciones#eventos" },
+      { label: "Cadenas de venues", href: "/soluciones#cadenas" },
+      { label: "Usuarios finales", href: "/soluciones#usuarios" },
+      { label: "Organizadores", href: "/soluciones#organizadores" },
       { label: "Precios", href: "/precios" },
+      { label: "Todos los recursos", href: "/recursos" },
       { label: "Aprender", href: "/recursos/aprender" },
+      { label: "Empresa", href: "/recursos/empresa" },
+      { label: "Fundador", href: "/recursos/fundador" },
+      { label: "Soporte", href: "/recursos/soporte" },
       { label: "Contacto", href: "/recursos/contacto" },
     ],
   },
@@ -49,7 +72,11 @@ export default function Navbar() {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const desktopNavRef = useRef<HTMLElement>(null);
+  const desktopTriggerRef = useRef<HTMLButtonElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -62,8 +89,31 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    startTransition(() => setMobileOpen(false));
+    startTransition(() => {
+      setDesktopOpen(false);
+      setMobileOpen(false);
+    });
   }, [pathname]);
+
+  useEffect(() => {
+    if (!desktopOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!desktopNavRef.current?.contains(event.target as Node)) setDesktopOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setDesktopOpen(false);
+      desktopTriggerRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [desktopOpen]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -107,6 +157,8 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   const closeMobileMenu = () => setMobileOpen(false);
+  const closeDesktopMenu = () => setDesktopOpen(false);
+  const exploreActive = EXPLORE_GROUPS.some((group) => group.links.some((link) => isCurrentRoute(pathname, link.href)));
 
   return (
     <motion.header
@@ -121,25 +173,87 @@ export default function Navbar() {
           <span className="text-base font-semibold tracking-tight text-white">ID-Night</span>
         </Link>
 
-        <nav aria-label="Navegación principal" className="hidden items-center gap-1 md:flex">
+        <nav
+          ref={desktopNavRef}
+          aria-label="Navegación principal"
+          className="hidden items-center gap-1 lg:flex"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) closeDesktopMenu();
+          }}
+        >
           {DESKTOP_NAV_ITEMS.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
               {item.label}
             </Link>
           ))}
+          <button
+            ref={desktopTriggerRef}
+            type="button"
+            aria-expanded={desktopOpen}
+            aria-controls={DESKTOP_MENU_ID}
+            onClick={() => setDesktopOpen((open) => !open)}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowDown") return;
+              event.preventDefault();
+              setDesktopOpen(true);
+              window.requestAnimationFrame(() => desktopMenuRef.current?.querySelector<HTMLElement>("a[href]")?.focus());
+            }}
+            className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none ${desktopOpen || exploreActive ? "bg-white/8 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}
+          >
+            Explorar
+            <span aria-hidden="true" className={`text-xs transition-transform duration-200 motion-reduce:transition-none ${desktopOpen ? "rotate-180" : ""}`}>▾</span>
+          </button>
           <Link href="/#participar" className="ml-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
             Participar
           </Link>
+
+          <AnimatePresence>
+            {desktopOpen && (
+              <motion.div
+                ref={desktopMenuRef}
+                id={DESKTOP_MENU_ID}
+                aria-label="Explorar ID-Night"
+                initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                className="absolute inset-x-4 top-[calc(100%+0.5rem)] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[28px] border border-white/10 bg-[#0F0F1A]/98 p-5 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:inset-x-6 xl:left-1/2 xl:right-auto xl:w-[min(1180px,calc(100vw-3rem))] xl:-translate-x-1/2"
+              >
+                <div className="mb-4 flex items-end justify-between gap-6 border-b border-white/8 pb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Explorar ID-Night</p>
+                    <p className="mt-1 text-xs text-slate-500">La iniciativa, el ecosistema y las formas de participar.</p>
+                  </div>
+                  <Link href="/#participar" onClick={closeDesktopMenu} className="rounded-full border border-cyan-300/25 bg-cyan-300/8 px-4 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-300/14 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
+                    Sumate a la conversación
+                  </Link>
+                </div>
+                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[0.9fr_1fr_1.35fr_0.8fr]">
+                  {EXPLORE_GROUPS.map((group) => (
+                    <section key={group.label} aria-labelledby={`${DESKTOP_MENU_ID}-${group.label.replaceAll(" ", "-").toLowerCase()}`}>
+                      <h2 id={`${DESKTOP_MENU_ID}-${group.label.replaceAll(" ", "-").toLowerCase()}`} className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300/80">{group.label}</h2>
+                      <div className="grid gap-0.5">
+                        {group.links.map((link) => {
+                          const active = isCurrentRoute(pathname, link.href);
+                          return <Link key={link.href} href={link.href} onClick={closeDesktopMenu} aria-current={active ? "page" : undefined} className={`rounded-xl px-3 py-2 text-sm leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none ${active ? "bg-white/8 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{link.label}</Link>;
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </nav>
 
-        <button type="button" className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 md:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menú" aria-expanded={mobileOpen} aria-controls={MOBILE_MENU_ID}>
+        <button type="button" className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menú" aria-expanded={mobileOpen} aria-controls={MOBILE_MENU_ID}>
           Menú
         </button>
       </div>
 
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.16 }} className="fixed inset-0 z-50 bg-[#04070f]/75 backdrop-blur-sm md:hidden" onMouseDown={closeMobileMenu}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.16 }} className="fixed inset-0 z-50 bg-[#04070f]/75 backdrop-blur-sm lg:hidden" onMouseDown={closeMobileMenu}>
             <motion.div
               ref={menuRef}
               id={MOBILE_MENU_ID}
@@ -160,7 +274,7 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {MOBILE_GROUPS.map((group) => (
+              {EXPLORE_GROUPS.map((group) => (
                 <div key={group.label} className="border-t border-white/8 py-4 first:border-t-0 first:pt-0">
                   <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{group.label}</p>
                   <div className="grid gap-1 sm:grid-cols-2">
