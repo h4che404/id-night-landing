@@ -32,10 +32,10 @@ export function HeroSection() {
   const contact = buildHomepageContact(homepageContent.hero.secondaryCta.profile);
 
   return (
-    <section id={homepageContent.hero.id} aria-labelledby="home-vision-title" className="relative isolate flex min-h-[min(860px,100svh)] items-center overflow-hidden border-b border-white/8 pt-16">
+    <section id={homepageContent.hero.id} aria-labelledby="home-vision-title" className="relative isolate flex min-h-[min(860px,100svh)] items-center overflow-hidden border-b border-white/8 bg-[#0b1020] pt-16">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_24%,rgba(48,208,240,0.2),transparent_34%),radial-gradient(circle_at_50%_45%,rgba(80,143,240,0.16),transparent_38%),radial-gradient(circle_at_86%_30%,rgba(160,80,240,0.2),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,15,0.08),transparent_54%,rgba(8,8,15,0.72)_100%)]" />
       <NeuralBackground />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(8,8,15,0.2)_0%,rgba(8,8,15,0.62)_58%,#08080f_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,15,0.2),rgba(8,8,15,0.05)_48%,#08080f_100%)]" />
       <div className="relative mx-auto w-full max-w-5xl px-5 py-20 text-center sm:px-6 md:py-28">
         <p className={eyebrow}>{homepageContent.hero.eyebrow}</p>
         <h1 id="home-vision-title" className="mx-auto mt-6 max-w-4xl text-[clamp(2.55rem,7vw,5.75rem)] font-semibold leading-[0.98] tracking-[-0.045em] text-white">{homepageContent.hero.title}</h1>

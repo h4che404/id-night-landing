@@ -4,7 +4,14 @@ import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
 import {
   CURSOR_LINK_COLOR,
+  CURSOR_LINK_GLOW,
+  CURSOR_LINK_WIDTH,
   MAX_CURSOR_LINKS,
+  PARTICLE_LINK_GLOW,
+  PARTICLE_LINK_WIDTH,
+  PARTICLE_NODE_GLOW,
+  PARTICLE_NODE_HIGHLIGHT_RADIUS,
+  PARTICLE_NODE_RADIUS,
   PARTICLE_NODE_COLORS,
   PARTICLE_LINK_COLORS,
   POINTER_RADIUS,
@@ -66,7 +73,8 @@ export default function NeuralBackground() {
       }
 
       context.clearRect(0, 0, width, height);
-      context.lineWidth = 1;
+      context.lineWidth = PARTICLE_LINK_WIDTH;
+      context.shadowBlur = PARTICLE_LINK_GLOW;
       const threshold = Math.min(190, width * 0.22);
       const thresholdSquared = threshold * threshold;
 
@@ -80,8 +88,10 @@ export default function NeuralBackground() {
 
           if (distanceSquared > thresholdSquared) continue;
           const distance = Math.sqrt(distanceSquared);
+          const linkColor = PARTICLE_LINK_COLORS[(index + otherIndex) % PARTICLE_LINK_COLORS.length];
           context.globalAlpha = 1 - distance / threshold;
-          context.strokeStyle = PARTICLE_LINK_COLORS[(index + otherIndex) % PARTICLE_LINK_COLORS.length];
+          context.strokeStyle = linkColor;
+          context.shadowColor = linkColor;
           context.beginPath();
           context.moveTo(fromX, fromY);
           context.lineTo(toX, toY);
@@ -104,8 +114,10 @@ export default function NeuralBackground() {
           nearestDistances[slot] = distanceSquared;
           nearestIndexes[slot] = index;
         }
-        context.lineWidth = 1.25;
+        context.lineWidth = CURSOR_LINK_WIDTH;
+        context.shadowBlur = CURSOR_LINK_GLOW;
         context.strokeStyle = CURSOR_LINK_COLOR;
+        context.shadowColor = CURSOR_LINK_COLOR;
         for (let slot = 0; slot < MAX_CURSOR_LINKS && nearestIndexes[slot] >= 0; slot += 1) {
           const index = nearestIndexes[slot];
           context.globalAlpha = (1 - Math.sqrt(nearestDistances[slot]) / POINTER_RADIUS) * pointer.strength;
@@ -117,13 +129,17 @@ export default function NeuralBackground() {
       }
 
       context.globalAlpha = 1;
+      context.shadowBlur = PARTICLE_NODE_GLOW;
       for (let index = 0; index < points.length; index += 1) {
-        const radius = index % 6 === 0 ? 2.8 : 1.8;
-        context.fillStyle = PARTICLE_NODE_COLORS[index % PARTICLE_NODE_COLORS.length];
+        const radius = index % 6 === 0 ? PARTICLE_NODE_HIGHLIGHT_RADIUS : PARTICLE_NODE_RADIUS;
+        const nodeColor = PARTICLE_NODE_COLORS[index % PARTICLE_NODE_COLORS.length];
+        context.fillStyle = nodeColor;
+        context.shadowColor = nodeColor;
         context.beginPath();
         context.arc(positions[index * 2], positions[index * 2 + 1], radius, 0, Math.PI * 2);
         context.fill();
       }
+      context.shadowBlur = 0;
 
       drawCount += 1;
       updateDiagnostics(loop.isScheduled());
@@ -203,7 +219,7 @@ export default function NeuralBackground() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full opacity-80"
+      className="pointer-events-none absolute inset-0 h-full w-full"
     />
   );
 }

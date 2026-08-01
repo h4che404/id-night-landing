@@ -11,15 +11,22 @@ export const CONSTELLATION_CYAN = "#30d0f0";
 export const CONSTELLATION_BLUE = "#508ff0";
 export const CONSTELLATION_VIOLET = "#a050f0";
 export const CURSOR_LINK_COLOR = "rgba(48, 208, 240, 0.86)";
+export const PARTICLE_LINK_WIDTH = 1.2;
+export const PARTICLE_LINK_GLOW = 2.5;
+export const CURSOR_LINK_WIDTH = 1.5;
+export const CURSOR_LINK_GLOW = 4;
+export const PARTICLE_NODE_RADIUS = 2.3;
+export const PARTICLE_NODE_HIGHLIGHT_RADIUS = 3.5;
+export const PARTICLE_NODE_GLOW = 9;
 export const PARTICLE_LINK_COLORS = [
-  "rgba(48, 208, 240, 0.34)",
-  "rgba(80, 143, 240, 0.32)",
-  "rgba(160, 80, 240, 0.3)",
+  "rgba(48, 208, 240, 0.66)",
+  "rgba(80, 143, 240, 0.62)",
+  "rgba(160, 80, 240, 0.6)",
 ] as const;
 export const PARTICLE_NODE_COLORS = [
-  "rgba(48, 208, 240, 0.88)",
-  "rgba(80, 143, 240, 0.84)",
-  "rgba(160, 80, 240, 0.82)",
+  "rgba(48, 208, 240, 1)",
+  "rgba(80, 143, 240, 0.98)",
+  "rgba(160, 80, 240, 0.98)",
 ] as const;
 
 export type Point = {

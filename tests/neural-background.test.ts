@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import {
   CURSOR_LINK_COLOR,
+  CURSOR_LINK_GLOW,
+  CURSOR_LINK_WIDTH,
   CONSTELLATION_BLUE,
   CONSTELLATION_CYAN,
   CONSTELLATION_VIOLET,
@@ -15,7 +17,12 @@ import {
   MOBILE_POINT_MAX,
   MOBILE_POINT_MIN,
   PARTICLE_LINK_COLORS,
+  PARTICLE_LINK_GLOW,
+  PARTICLE_LINK_WIDTH,
   PARTICLE_NODE_COLORS,
+  PARTICLE_NODE_GLOW,
+  PARTICLE_NODE_HIGHLIGHT_RADIUS,
+  PARTICLE_NODE_RADIUS,
   POINTER_MAX_OFFSET,
   POINTER_RADIUS,
   createFrameLoop,
@@ -27,7 +34,7 @@ import {
   getSquaredDistance,
   shouldAnimate,
 } from "../components/home/neural-background";
-import { isNeuralBackgroundPass } from "../scripts/homepage-mobile-cdp-harness.mjs";
+import { isHeroPalettePass, isNeuralBackgroundPass } from "../scripts/homepage-mobile-cdp-harness.mjs";
 
 const componentSource = fs.readFileSync(path.resolve(import.meta.dirname, "../components/home/NeuralBackground.tsx"), "utf8");
 
@@ -70,9 +77,23 @@ test("links and nodes use three sampled logo tones with brighter bounded cursor 
   assert.equal(MAX_CURSOR_LINKS, 6);
   assert.equal(POINTER_RADIUS, 260);
   assert.match(CURSOR_LINK_COLOR, /0\.86/);
-  assert(PARTICLE_LINK_COLORS.every((color) => /0\.3(?:4|2|\))/.test(color)));
+  assert.deepEqual(PARTICLE_LINK_COLORS, ["rgba(48, 208, 240, 0.66)", "rgba(80, 143, 240, 0.62)", "rgba(160, 80, 240, 0.6)"]);
+  assert.deepEqual(PARTICLE_NODE_COLORS, ["rgba(48, 208, 240, 1)", "rgba(80, 143, 240, 0.98)", "rgba(160, 80, 240, 0.98)"]);
+  assert.deepEqual([PARTICLE_LINK_WIDTH, PARTICLE_LINK_GLOW, CURSOR_LINK_WIDTH, CURSOR_LINK_GLOW], [1.2, 2.5, 1.5, 4]);
+  assert.deepEqual([PARTICLE_NODE_RADIUS, PARTICLE_NODE_HIGHLIGHT_RADIUS, PARTICLE_NODE_GLOW], [2.3, 3.5, 9]);
   assert.match(componentSource, /context\.strokeStyle = CURSOR_LINK_COLOR/);
   assert.match(componentSource, /nearestIndexes = new Int16Array\(MAX_CURSOR_LINKS\)/);
+  assert.match(componentSource, /context\.shadowBlur = PARTICLE_LINK_GLOW/);
+  assert.match(componentSource, /context\.shadowBlur = PARTICLE_NODE_GLOW/);
+});
+
+test("runtime palette evidence requires a brighter composite with every logo tone visible", () => {
+  const visible = { averageLuminance: 0.08, chromaticRatio: 0.08, networkPixelRatio: 0.02, cyanRatio: 0.02, blueRatio: 0.015, violetRatio: 0.018 };
+  assert.equal(isHeroPalettePass(visible), true);
+  assert.equal(isHeroPalettePass({ ...visible, averageLuminance: 0.039 }), false);
+  assert.equal(isHeroPalettePass({ ...visible, chromaticRatio: 0.0036 }), false);
+  assert.equal(isHeroPalettePass({ ...visible, networkPixelRatio: 0.009 }), false);
+  assert.equal(isHeroPalettePass({ ...visible, violetRatio: 0 }), false);
 });
 
 test("hot loops reject squared distances before square roots and avoid pointer offset objects", () => {
@@ -154,6 +175,7 @@ test("DPR is capped and the canvas remains decorative and non-blocking", () => {
   assert.equal(getCappedDpr(0), 1);
   assert.match(componentSource, /aria-hidden="true"/);
   assert.match(componentSource, /pointer-events-none/);
+  assert.doesNotMatch(componentSource, /opacity-80/);
 });
 
 test("runtime evidence requires stopped offscreen and reduced-motion counters plus one bounded resumed loop", () => {

@@ -10,6 +10,7 @@ import {
   NEURAL_VIEWPORTS,
   REGRESSION_VIEWPORTS,
   evaluateViewportFindings,
+  isHeroPalettePass,
   isProductionViewportPass,
   isExploreMenuPass,
   isMobileMenuPass,
@@ -63,6 +64,7 @@ test("isProductionViewportPass requires exact width, height, png size, dpr1, and
     pngDimensions: { width: 390, height: 844 },
     geometry: { viewport: { innerWidth: 390, innerHeight: 844, devicePixelRatio: 1 }, hasNextDevIndicator: false },
     evaluation: { pass: true },
+    palette: { averageLuminance: 0.08, chromaticRatio: 0.08, networkPixelRatio: 0.02, cyanRatio: 0.02, blueRatio: 0.015, violetRatio: 0.018 },
   };
 
   assert.equal(isProductionViewportPass(base), true);
@@ -75,7 +77,10 @@ test("isProductionViewportPass requires exact width, height, png size, dpr1, and
     { ...base, pngDimensions: { ...base.pngDimensions, height: 845 } },
     { ...base, geometry: { ...base.geometry, hasNextDevIndicator: true } },
     { ...base, evaluation: { pass: false } },
+    { ...base, palette: { ...base.palette, violetRatio: 0 } },
   ]) assert.equal(isProductionViewportPass(candidate), false);
+  assert.equal(isProductionViewportPass({ ...base, viewport: { width: 375, height: 844 }, pngDimensions: { width: 375, height: 844 }, geometry: { ...base.geometry, viewport: { ...base.geometry.viewport, innerWidth: 375 } }, palette: null }), false);
+  assert.equal(isHeroPalettePass(base.palette), true);
 });
 
 test("isExploreMenuPass requires bounded cards, natural focus entry, hash closure, and clean runtime", () => {
