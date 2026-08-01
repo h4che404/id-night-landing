@@ -7,6 +7,7 @@ import {
   EVIDENCE_ROOT,
   MOBILE_VIEWPORTS,
   MOBILE_NAV_VIEWPORTS,
+  NEURAL_VIEWPORTS,
   REGRESSION_VIEWPORTS,
   evaluateViewportFindings,
   isProductionViewportPass,
@@ -21,6 +22,7 @@ test("viewport matrices stay exact", () => {
   assert.deepEqual(REGRESSION_VIEWPORTS, [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
   assert.deepEqual(DESKTOP_NAV_VIEWPORTS, [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }]);
   assert.deepEqual(MOBILE_NAV_VIEWPORTS, [{ width: 320, height: 812 }, { width: 390, height: 844 }]);
+  assert.deepEqual(NEURAL_VIEWPORTS, [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
 });
 
 test("evaluateViewportFindings passes when essential bounds fit", () => {

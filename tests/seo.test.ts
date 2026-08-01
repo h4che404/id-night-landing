@@ -869,7 +869,7 @@ test("homepage motion isolates client behavior and honors reduced-motion and lif
   assert.match(neuralSource, /useReducedMotion\(\)/);
   assert.match(neuralSource, /new IntersectionObserver/);
   assert.match(neuralSource, /new ResizeObserver/);
-  assert.match(neuralSource, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
+  assert.match(neuralSource, /getCappedDpr\(window\.devicePixelRatio\)/);
   assert.match(neuralSource, /cancelAnimationFrame\(frameId\)/);
   assert.match(neuralSource, /removeEventListener\("pointermove", onPointerMove\)/);
   assert.match(revealSource, /initial=\{reduceMotion \? false/);

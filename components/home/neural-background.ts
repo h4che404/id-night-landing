@@ -1,10 +1,26 @@
 export const MAX_DPR = 1.5;
-export const FRAME_INTERVAL = 1000 / 30;
+export const FRAME_INTERVAL = 1000 / 60;
 export const POINTER_RADIUS = 260;
 export const POINTER_MAX_OFFSET = 9;
 export const MAX_CURSOR_LINKS = 6;
-export const CURSOR_LINK_COLOR = "rgba(103, 232, 249, 0.72)";
-export const PARTICLE_LINK_COLORS = ["rgba(56, 189, 248, 0.24)", "rgba(124, 58, 237, 0.22)"] as const;
+export const MOBILE_POINT_MIN = 28;
+export const MOBILE_POINT_MAX = 34;
+export const DESKTOP_POINT_MIN = 52;
+export const DESKTOP_POINT_MAX = 72;
+export const CONSTELLATION_CYAN = "#30d0f0";
+export const CONSTELLATION_BLUE = "#508ff0";
+export const CONSTELLATION_VIOLET = "#a050f0";
+export const CURSOR_LINK_COLOR = "rgba(48, 208, 240, 0.86)";
+export const PARTICLE_LINK_COLORS = [
+  "rgba(48, 208, 240, 0.34)",
+  "rgba(80, 143, 240, 0.32)",
+  "rgba(160, 80, 240, 0.3)",
+] as const;
+export const PARTICLE_NODE_COLORS = [
+  "rgba(48, 208, 240, 0.88)",
+  "rgba(80, 143, 240, 0.84)",
+  "rgba(160, 80, 240, 0.82)",
+] as const;
 
 export type Point = {
   x: number;
@@ -23,8 +39,8 @@ type FrameLoopOptions = {
 export function getPointCount(width: number, height: number) {
   const area = Math.max(0, width) * Math.max(0, height);
   return width < 640
-    ? Math.max(18, Math.min(22, Math.round(area / 16_000)))
-    : Math.max(32, Math.min(42, Math.round(area / 32_000)));
+    ? Math.max(MOBILE_POINT_MIN, Math.min(MOBILE_POINT_MAX, Math.round(area / 9_000)))
+    : Math.max(DESKTOP_POINT_MIN, Math.min(DESKTOP_POINT_MAX, Math.round(area / 19_000)));
 }
 
 export function createPoints(count: number, seed = 0x1d91a7): Point[] {
@@ -42,6 +58,22 @@ export function createPoints(count: number, seed = 0x1d91a7): Point[] {
   }));
 }
 
+export function getSquaredDistance(fromX: number, fromY: number, toX: number, toY: number) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  return dx * dx + dy * dy;
+}
+
+export function getPointerOffsetScale(dx: number, dy: number, strength: number) {
+  const distanceSquared = dx * dx + dy * dy;
+  if (!distanceSquared || distanceSquared >= POINTER_RADIUS * POINTER_RADIUS || strength <= 0) return 0;
+
+  const distance = Math.sqrt(distanceSquared);
+  const weight = 1 - distance / POINTER_RADIUS;
+  const offset = Math.min(POINTER_MAX_OFFSET, weight * weight * POINTER_MAX_OFFSET * strength);
+  return offset / distance;
+}
+
 export function getPointerOffset(
   pointX: number,
   pointY: number,
@@ -51,12 +83,8 @@ export function getPointerOffset(
 ) {
   const dx = pointerX - pointX;
   const dy = pointerY - pointY;
-  const distance = Math.hypot(dx, dy);
-  if (!distance || distance >= POINTER_RADIUS || strength <= 0) return { x: 0, y: 0 };
-
-  const weight = 1 - distance / POINTER_RADIUS;
-  const offset = Math.min(POINTER_MAX_OFFSET, weight * weight * POINTER_MAX_OFFSET * strength);
-  return { x: (dx / distance) * offset, y: (dy / distance) * offset };
+  const scale = getPointerOffsetScale(dx, dy, strength);
+  return { x: dx * scale, y: dy * scale };
 }
 
 export function getCappedDpr(devicePixelRatio: number) {
@@ -70,7 +98,7 @@ export function shouldAnimate(visible: boolean, documentHidden: boolean, reduced
 export function createFrameLoop({ request, cancel, onFrame, onSchedule }: FrameLoopOptions) {
   let active = false;
   let frameId: number | null = null;
-  let lastFrame = -Infinity;
+  let nextFrame = -Infinity;
 
   const schedule = () => {
     if (!active || frameId !== null) return;
@@ -81,9 +109,10 @@ export function createFrameLoop({ request, cancel, onFrame, onSchedule }: FrameL
   const tick = (time: number) => {
     frameId = null;
     if (!active) return;
-    if (time - lastFrame >= FRAME_INTERVAL) {
+    if (!Number.isFinite(nextFrame) || time + 0.5 >= nextFrame) {
       onFrame(time);
-      lastFrame = time;
+      nextFrame = Number.isFinite(nextFrame) ? nextFrame + FRAME_INTERVAL : time + FRAME_INTERVAL;
+      if (nextFrame <= time) nextFrame = time + FRAME_INTERVAL;
     }
     schedule();
   };
@@ -92,9 +121,10 @@ export function createFrameLoop({ request, cancel, onFrame, onSchedule }: FrameL
     setActive(nextActive: boolean) {
       active = nextActive;
       if (active) schedule();
-      else if (frameId !== null) {
-        cancel(frameId);
+      else {
+        if (frameId !== null) cancel(frameId);
         frameId = null;
+        nextFrame = -Infinity;
       }
     },
     isScheduled() {

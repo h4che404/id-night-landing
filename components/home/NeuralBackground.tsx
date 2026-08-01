@@ -5,12 +5,15 @@ import { useReducedMotion } from "framer-motion";
 import {
   CURSOR_LINK_COLOR,
   MAX_CURSOR_LINKS,
+  PARTICLE_NODE_COLORS,
   PARTICLE_LINK_COLORS,
   POINTER_RADIUS,
   createFrameLoop,
   createPoints,
+  getCappedDpr,
   getPointCount,
-  getPointerOffset,
+  getPointerOffsetScale,
+  getSquaredDistance,
   shouldAnimate,
 } from "@/components/home/neural-background";
 
@@ -55,24 +58,28 @@ export default function NeuralBackground() {
         const driftY = Math.cos(elapsed * 0.8 * point.speed + point.phase) * 0.03;
         const baseX = (point.x + driftX) * width;
         const baseY = (point.y + driftY) * height;
-        const offset = getPointerOffset(baseX, baseY, pointerX, pointerY, pointer.strength);
-        positions[index * 2] = baseX + offset.x;
-        positions[index * 2 + 1] = baseY + offset.y;
+        const dx = pointerX - baseX;
+        const dy = pointerY - baseY;
+        const offsetScale = getPointerOffsetScale(dx, dy, pointer.strength);
+        positions[index * 2] = baseX + dx * offsetScale;
+        positions[index * 2 + 1] = baseY + dy * offsetScale;
       }
 
       context.clearRect(0, 0, width, height);
       context.lineWidth = 1;
       const threshold = Math.min(190, width * 0.22);
+      const thresholdSquared = threshold * threshold;
 
       for (let index = 0; index < points.length; index += 1) {
+        const fromX = positions[index * 2];
+        const fromY = positions[index * 2 + 1];
         for (let otherIndex = index + 1; otherIndex < points.length; otherIndex += 1) {
-          const fromX = positions[index * 2];
-          const fromY = positions[index * 2 + 1];
           const toX = positions[otherIndex * 2];
           const toY = positions[otherIndex * 2 + 1];
-          const distance = Math.hypot(fromX - toX, fromY - toY);
+          const distanceSquared = getSquaredDistance(fromX, fromY, toX, toY);
 
-          if (distance > threshold) continue;
+          if (distanceSquared > thresholdSquared) continue;
+          const distance = Math.sqrt(distanceSquared);
           context.globalAlpha = 1 - distance / threshold;
           context.strokeStyle = PARTICLE_LINK_COLORS[(index + otherIndex) % PARTICLE_LINK_COLORS.length];
           context.beginPath();
@@ -86,22 +93,22 @@ export default function NeuralBackground() {
         nearestIndexes.fill(-1);
         nearestDistances.fill(Infinity);
         for (let index = 0; index < points.length; index += 1) {
-          const distance = Math.hypot(positions[index * 2] - pointerX, positions[index * 2 + 1] - pointerY);
-          if (distance >= POINTER_RADIUS || distance >= nearestDistances[MAX_CURSOR_LINKS - 1]) continue;
+          const distanceSquared = getSquaredDistance(positions[index * 2], positions[index * 2 + 1], pointerX, pointerY);
+          if (distanceSquared >= POINTER_RADIUS * POINTER_RADIUS || distanceSquared >= nearestDistances[MAX_CURSOR_LINKS - 1]) continue;
           let slot = MAX_CURSOR_LINKS - 1;
-          while (slot > 0 && distance < nearestDistances[slot - 1]) {
+          while (slot > 0 && distanceSquared < nearestDistances[slot - 1]) {
             nearestDistances[slot] = nearestDistances[slot - 1];
             nearestIndexes[slot] = nearestIndexes[slot - 1];
             slot -= 1;
           }
-          nearestDistances[slot] = distance;
+          nearestDistances[slot] = distanceSquared;
           nearestIndexes[slot] = index;
         }
         context.lineWidth = 1.25;
         context.strokeStyle = CURSOR_LINK_COLOR;
         for (let slot = 0; slot < MAX_CURSOR_LINKS && nearestIndexes[slot] >= 0; slot += 1) {
           const index = nearestIndexes[slot];
-          context.globalAlpha = (1 - nearestDistances[slot] / POINTER_RADIUS) * pointer.strength;
+          context.globalAlpha = (1 - Math.sqrt(nearestDistances[slot]) / POINTER_RADIUS) * pointer.strength;
           context.beginPath();
           context.moveTo(positions[index * 2], positions[index * 2 + 1]);
           context.lineTo(pointerX, pointerY);
@@ -112,7 +119,7 @@ export default function NeuralBackground() {
       context.globalAlpha = 1;
       for (let index = 0; index < points.length; index += 1) {
         const radius = index % 6 === 0 ? 2.8 : 1.8;
-        context.fillStyle = index % 3 === 0 ? "rgba(167, 139, 250, 0.72)" : "rgba(103, 232, 249, 0.7)";
+        context.fillStyle = PARTICLE_NODE_COLORS[index % PARTICLE_NODE_COLORS.length];
         context.beginPath();
         context.arc(positions[index * 2], positions[index * 2 + 1], radius, 0, Math.PI * 2);
         context.fill();
@@ -138,7 +145,7 @@ export default function NeuralBackground() {
     };
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const dpr = getCappedDpr(window.devicePixelRatio);
       const { width, height } = canvas.getBoundingClientRect();
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));

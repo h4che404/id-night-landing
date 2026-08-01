@@ -27,6 +27,7 @@ export const MOBILE_VIEWPORTS = [{ width: 320, height: 812 }, { width: 360, heig
 export const REGRESSION_VIEWPORTS = [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }];
 export const DESKTOP_NAV_VIEWPORTS = [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }];
 export const MOBILE_NAV_VIEWPORTS = [{ width: 320, height: 812 }, { width: 390, height: 844 }];
+export const NEURAL_VIEWPORTS = [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }];
 
 export function parsePngDimensions(buffer) { if (buffer.length < 24 || !buffer.subarray(0, 8).equals(PNG)) throw new Error("Invalid PNG signature"); return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) }; }
 export function evaluateViewportFindings(width, findings) { const failures = []; let maxRight = -Infinity; for (const finding of findings) { if (finding.missing || !finding.rects?.length) { failures.push({ id: finding.id, reason: "Required target is missing or produced no measurable rects" }); continue; } for (const rect of finding.rects) { maxRight = Math.max(maxRight, rect.right); if (rect.left < 0) { failures.push({ id: finding.id, reason: `Required target crosses the left edge (${rect.left}px)`, rect }); break; } if (rect.right > width) { failures.push({ id: finding.id, reason: `Required target crosses the right edge (${rect.right}px > ${width}px)`, rect }); break; } } } return { pass: failures.length === 0, failures, maxRight: Number.isFinite(maxRight) ? maxRight : null }; }
@@ -113,12 +114,33 @@ export function isMobileMenuPass(result) {
   return geometry.expanded === "true" && geometry.panel && geometry.panel.left >= 0 && geometry.panel.right <= viewport.width && geometry.panel.top >= 0 && geometry.panel.bottom <= viewport.height && geometry.panel.overflowY === "auto" && geometry.panel.scrollHeight > geometry.panel.clientHeight && geometry.cards.length === 5 && geometry.firstLinks.length === 2 && geometry.firstLinks[0].top === geometry.firstLinks[1].top && geometry.firstLinks[0].left < geometry.firstLinks[1].left && geometry.focusedText === "Cerrar" && geometry.bodyOverflow === "hidden" && closure.menuOpen === false && closure.focusedControls === "site-mobile-menu" && closure.bodyOverflow === "" && runtimeEvents.length === 0;
 }
 async function probeNeuralBackground(client, baseUrl) {
-  await client.send("Emulation.setDeviceMetricsOverride", metrics({ width: 1440, height: 900 }));
+  await client.send("Emulation.setDeviceMetricsOverride", metrics(NEURAL_VIEWPORTS[0]));
   await client.send("Page.navigate", { url: baseUrl });
   await client.event("Page.loadEventFired");
   await delay(600);
   client.drainEvents();
-  const snapshot = () => client.eval(`(()=>{const canvas=document.querySelector('#vision canvas');return{pointCount:Number(canvas?.dataset.pointCount),drawCount:Number(canvas?.dataset.drawCount),rafRequests:Number(canvas?.dataset.rafRequests),rafActive:canvas?.dataset.rafActive,pointerActive:canvas?.dataset.pointerActive,dpr:Number(canvas?.dataset.dpr)}})()`);
+  const snapshot = () => client.eval(`(()=>{const canvas=document.querySelector('#vision canvas');return{sampledAt:performance.now(),pointCount:Number(canvas?.dataset.pointCount),drawCount:Number(canvas?.dataset.drawCount),rafRequests:Number(canvas?.dataset.rafRequests),rafActive:canvas?.dataset.rafActive,pointerActive:canvas?.dataset.pointerActive,dpr:Number(canvas?.dataset.dpr)}})()`);
+  const setViewport = async (viewport) => {
+    await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport));
+    await client.eval("scrollTo(0,0)");
+    await delay(250);
+  };
+  const densitySamples = [];
+  for (const viewport of NEURAL_VIEWPORTS) {
+    await setViewport(viewport);
+    densitySamples.push({ viewport, ...(await snapshot()) });
+  }
+  const visibleSamples = [];
+  for (const viewport of NEURAL_VIEWPORTS.filter(({ width }) => width === 375 || width === 1440)) {
+    await setViewport(viewport);
+    await delay(350);
+    const start = await snapshot();
+    await delay(1_200);
+    const end = await snapshot();
+    const elapsedMs = end.sampledAt - start.sampledAt;
+    const drawDelta = end.drawCount - start.drawCount;
+    visibleSamples.push({ viewport, start, end, elapsedMs, drawDelta, cadence: drawDelta * 1_000 / elapsedMs });
+  }
   await client.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 180, y: 330 });
   await delay(400);
   const interactive = await snapshot();
@@ -142,12 +164,15 @@ async function probeNeuralBackground(client, baseUrl) {
   const reducedEnd = await snapshot();
   await client.send("Emulation.setEmulatedMedia", { features: [] });
   const runtimeEvents = client.drainEvents().filter((event) => event.method === "Runtime.exceptionThrown" || event.method === "Log.entryAdded" || (event.method === "Runtime.consoleAPICalled" && event.params?.type === "error"));
-  return { viewport: { width: 1440, height: 900 }, interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents };
+  return { viewport: { width: 1440, height: 900 }, densitySamples, visibleSamples, interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents };
 }
 export function isNeuralBackgroundPass(result) {
-  const { interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents } = result;
+  const { densitySamples, visibleSamples, interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents } = result;
   const resumedDraws = resumedEnd.drawCount - resumedStart.drawCount;
-  return interactive.pointCount >= 32 && interactive.pointCount <= 42 && interactive.pointerActive === "true" && interactive.rafActive === "true" && interactive.dpr <= 1.5 && offscreenStart.rafActive === "false" && offscreenEnd.rafRequests === offscreenStart.rafRequests && offscreenEnd.drawCount === offscreenStart.drawCount && resumedStart.rafActive === "true" && resumedEnd.rafRequests > resumedStart.rafRequests && resumedDraws >= 8 && resumedDraws <= 13 && reducedStart.rafActive === "false" && reducedEnd.rafRequests === reducedStart.rafRequests && reducedEnd.drawCount === reducedStart.drawCount && reducedEnd.pointerActive === "false" && runtimeEvents.length === 0;
+  const resumedRequests = resumedEnd.rafRequests - resumedStart.rafRequests;
+  const densityPass = densitySamples.length === NEURAL_VIEWPORTS.length && densitySamples.every(({ viewport, pointCount }) => viewport.width < 640 ? pointCount >= 28 && pointCount <= 34 : pointCount >= 52 && pointCount <= 72);
+  const cadencePass = visibleSamples.length === 2 && visibleSamples.every(({ cadence, drawDelta, start, end }) => cadence >= 52 && cadence <= 64 && drawDelta >= 62 && start.rafActive === "true" && end.rafActive === "true");
+  return densityPass && cadencePass && interactive.pointCount >= 52 && interactive.pointCount <= 72 && interactive.pointerActive === "true" && interactive.rafActive === "true" && interactive.dpr <= 1.5 && offscreenStart.rafActive === "false" && offscreenEnd.rafRequests === offscreenStart.rafRequests && offscreenEnd.drawCount === offscreenStart.drawCount && resumedStart.rafActive === "true" && resumedRequests >= resumedDraws && resumedRequests <= resumedDraws * 3 + 3 && resumedDraws >= 17 && resumedDraws <= 24 && reducedStart.rafActive === "false" && reducedEnd.rafRequests === reducedStart.rafRequests && reducedEnd.drawCount === reducedStart.drawCount && reducedEnd.pointerActive === "false" && runtimeEvents.length === 0;
 }
 async function probePinnedNarrative(client, baseUrl) {
   await client.send("Emulation.setDeviceMetricsOverride", metrics({ width: 1440, height: 900 }));
