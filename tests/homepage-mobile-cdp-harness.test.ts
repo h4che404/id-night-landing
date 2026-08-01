@@ -3,11 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import {
+  DESKTOP_NAV_VIEWPORTS,
   EVIDENCE_ROOT,
   MOBILE_VIEWPORTS,
+  MOBILE_NAV_VIEWPORTS,
   REGRESSION_VIEWPORTS,
   evaluateViewportFindings,
   isProductionViewportPass,
+  isExploreMenuPass,
+  isMobileMenuPass,
   parsePngDimensions,
   resolveOutputDir,
 } from "../scripts/homepage-mobile-cdp-harness.mjs";
@@ -15,6 +19,8 @@ import {
 test("viewport matrices stay exact", () => {
   assert.deepEqual(MOBILE_VIEWPORTS, [{ width: 320, height: 812 }, { width: 360, height: 800 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }]);
   assert.deepEqual(REGRESSION_VIEWPORTS, [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
+  assert.deepEqual(DESKTOP_NAV_VIEWPORTS, [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }]);
+  assert.deepEqual(MOBILE_NAV_VIEWPORTS, [{ width: 320, height: 812 }, { width: 390, height: 844 }]);
 });
 
 test("evaluateViewportFindings passes when essential bounds fit", () => {
@@ -68,4 +74,49 @@ test("isProductionViewportPass requires exact width, height, png size, dpr1, and
     { ...base, geometry: { ...base.geometry, hasNextDevIndicator: true } },
     { ...base, evaluation: { pass: false } },
   ]) assert.equal(isProductionViewportPass(candidate), false);
+});
+
+test("isExploreMenuPass requires bounded cards, natural focus entry, hash closure, and clean runtime", () => {
+  const base = {
+    viewport: { width: 1024, height: 640 },
+    geometry: {
+      expanded: "true",
+      panel: { left: 24, right: 1000, top: 72, bottom: 624, overflowY: "auto" },
+      cards: [
+        { label: "La iniciativa", top: 150 },
+        { label: "Tecnología", top: 150 },
+        { label: "Soluciones", top: 150 },
+        { label: "Recursos", top: 350 },
+        { label: "Legal", top: 350 },
+      ],
+      focused: { href: "/#vision", insidePanel: true },
+    },
+    hashClosure: { hash: "#problema", menuOpen: false },
+    runtimeEvents: [],
+  };
+
+  assert.equal(isExploreMenuPass(base), true);
+  assert.equal(isExploreMenuPass({ ...base, hashClosure: { hash: "#problema", menuOpen: true } }), false);
+  assert.equal(isExploreMenuPass({ ...base, geometry: { ...base.geometry, focused: { href: "/#participar", insidePanel: false } } }), false);
+  assert.equal(isExploreMenuPass({ ...base, runtimeEvents: [{ method: "Runtime.exceptionThrown" }] }), false);
+});
+
+test("isMobileMenuPass requires compact shared cards, scroll containment, and Escape restoration", () => {
+  const base = {
+    viewport: { width: 320, height: 812 },
+    geometry: {
+      expanded: "true",
+      panel: { left: 12, right: 308, top: 12, bottom: 800, clientHeight: 788, scrollHeight: 1200, overflowY: "auto" },
+      cards: ["La iniciativa", "Tecnología", "Soluciones", "Recursos", "Legal"],
+      firstLinks: [{ left: 30, top: 120 }, { left: 160, top: 120 }],
+      focusedText: "Cerrar",
+      bodyOverflow: "hidden",
+    },
+    closure: { menuOpen: false, focusedControls: "site-mobile-menu", bodyOverflow: "" },
+    runtimeEvents: [],
+  };
+
+  assert.equal(isMobileMenuPass(base), true);
+  assert.equal(isMobileMenuPass({ ...base, closure: { ...base.closure, menuOpen: true } }), false);
+  assert.equal(isMobileMenuPass({ ...base, geometry: { ...base.geometry, firstLinks: [{ left: 30, top: 120 }, { left: 30, top: 160 }] } }), false);
 });

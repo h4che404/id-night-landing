@@ -607,21 +607,39 @@ test("homepage primary navigation does not include a dead PRÓXIMAMENTE control"
   assert.doesNotMatch(navbarSource, /aria-disabled="true"/, "Desktop primary navigation must not render disabled CTA chrome");
 });
 
-test("desktop navigation exposes one accessible Explore mega-menu with verified destinations", () => {
+test("Explore navigation exposes five described regions with complete unique destination coverage", () => {
   const navbarSource = readProjectFile("components", "Navbar.tsx");
+  const groupsSource = navbarSource.slice(navbarSource.indexOf("const EXPLORE_GROUPS"), navbarSource.indexOf("] as const;", navbarSource.indexOf("const EXPLORE_GROUPS")));
+  const expectedGroups = [
+    { label: "La iniciativa", description: "Por qué existe, qué creemos y quién la impulsa.", hrefs: ["/#vision", "/#problema", "/#principios", "/#actores", "/#etapa", "/#fundador"] },
+    { label: "Tecnología", description: "La plataforma, sus productos y herramientas.", hrefs: ["/#tecnologia", "/productos", "/productos#app-usuario", "/productos#app-puerta", "/productos#panel-admin", "/productos#biometrico", "/productos#credencial", "/productos#api"] },
+    { label: "Soluciones", description: "Propuestas para cada operación y tipo de espacio.", hrefs: ["/soluciones", "/soluciones#boliches", "/soluciones#eventos", "/soluciones#cadenas", "/soluciones#usuarios", "/soluciones#organizadores", "/precios"] },
+    { label: "Recursos", description: "Información, aprendizaje y canales de contacto.", hrefs: ["/recursos", "/recursos/aprender", "/recursos/empresa", "/recursos/fundador", "/recursos/soporte", "/recursos/contacto"] },
+    { label: "Legal", description: "Privacidad y condiciones de uso.", hrefs: ["/legal/privacidad", "/legal/terminos"] },
+  ];
+  const actualHrefs = [...groupsSource.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
+  const expectedHrefs = expectedGroups.flatMap((group) => group.hrefs);
 
-  for (const category of ["Idea y propósito", "Ecosistema", "Soluciones y recursos", "Legal"]) {
-    assert.match(navbarSource, new RegExp(escapeRegExp(category)));
+  assert.deepEqual(actualHrefs, expectedHrefs);
+  assert.equal(new Set(actualHrefs).size, actualHrefs.length, "Explore destinations must be unique");
+  assert.doesNotMatch(navbarSource, /Soluciones y recursos|Idea y propósito|Ecosistema/);
+  for (const [index, group] of expectedGroups.entries()) {
+    const start = groupsSource.indexOf(`label: "${group.label}"`);
+    const end = index + 1 < expectedGroups.length ? groupsSource.indexOf(`label: "${expectedGroups[index + 1].label}"`) : groupsSource.length;
+    const groupSource = groupsSource.slice(start, end);
+    assert(start >= 0, `Missing Explore category: ${group.label}`);
+    assert.match(groupSource, new RegExp(`description: "${escapeRegExp(group.description)}"`));
+    assert.deepEqual([...groupSource.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]), group.hrefs);
   }
-  for (const href of [
-    "/#vision", "/#problema", "/#principios", "/#actores", "/#etapa", "/#tecnologia", "/#fundador",
-    "/productos", "/productos#app-usuario", "/productos#app-puerta", "/productos#panel-admin", "/productos#biometrico", "/productos#credencial", "/productos#api",
-    "/soluciones", "/soluciones#boliches", "/soluciones#eventos", "/soluciones#cadenas", "/soluciones#usuarios", "/soluciones#organizadores",
-    "/precios", "/recursos", "/recursos/aprender", "/recursos/empresa", "/recursos/fundador", "/recursos/soporte", "/recursos/contacto",
-    "/legal/privacidad", "/legal/terminos",
-  ]) {
-    assert.match(navbarSource, new RegExp(`href: ["']${escapeRegExp(href)}["']`), `Missing verified navigation destination: ${href}`);
-  }
+
+  const initiativeSource = groupsSource.slice(groupsSource.indexOf('label: "La iniciativa"'), groupsSource.indexOf('label: "Tecnología"'));
+  const technologySource = groupsSource.slice(groupsSource.indexOf('label: "Tecnología"'), groupsSource.indexOf('label: "Soluciones"'));
+  assert.doesNotMatch(initiativeSource, /\/#tecnologia/);
+  assert.match(technologySource, /href: "\/#tecnologia"/);
+  assert.match(navbarSource, /aria-describedby=\{`\$\{DESKTOP_MENU_ID\}-\$\{group\.id\}-description`\}/);
+  assert.match(navbarSource, /data-explore-groups="desktop"/);
+  assert.match(navbarSource, /data-explore-groups="mobile"/);
+  assert.equal((navbarSource.match(/EXPLORE_GROUPS\.map\(\(group\)/g) ?? []).length, 2, "Desktop and mobile must render the same group data");
 
   assert.match(navbarSource, />\s*Explorar\s*</);
   assert.match(navbarSource, /aria-expanded=\{desktopOpen\}/);
@@ -629,6 +647,15 @@ test("desktop navigation exposes one accessible Explore mega-menu with verified 
   assert.match(navbarSource, /event\.key !== "ArrowDown"/);
   assert.match(navbarSource, /document\.addEventListener\("pointerdown"/);
   assert.match(navbarSource, /if \(!event\.currentTarget\.contains\(event\.relatedTarget\)\) closeDesktopMenu\(\)/);
+  assert.match(navbarSource, /DESKTOP_NAV_ITEMS\.map[\s\S]*href=\{item\.href\} onClick=\{closeDesktopMenu\}/);
+  assert.match(navbarSource, /href="\/#participar" onClick=\{closeDesktopMenu\} className="ml-2/);
+  const exploreTrigger = navbarSource.indexOf("aria-controls={DESKTOP_MENU_ID}");
+  const desktopMenu = navbarSource.indexOf("<AnimatePresence>", exploreTrigger);
+  const participateLink = navbarSource.indexOf('href="/#participar" onClick={closeDesktopMenu} className="ml-2');
+  assert(
+    exploreTrigger >= 0 && desktopMenu > exploreTrigger && participateLink > desktopMenu,
+    "Explore content must precede Participar in desktop tab order",
+  );
   assert.equal((navbarSource.match(/>\s*Explorar\s*</g) ?? []).length, 1, "Desktop navigation must keep one Explore trigger");
 });
 

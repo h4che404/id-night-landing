@@ -2,22 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
-
-type Point = {
-  x: number;
-  y: number;
-  phase: number;
-  speed: number;
-};
-
-function createPoints(count: number): Point[] {
-  return Array.from({ length: count }, (_, index) => ({
-    x: ((index * 47) % 101) / 100,
-    y: ((index * 71 + 19) % 97) / 96,
-    phase: index * 0.83,
-    speed: 0.7 + (index % 5) * 0.08,
-  }));
-}
+import {
+  CURSOR_LINK_COLOR,
+  MAX_CURSOR_LINKS,
+  PARTICLE_LINK_COLORS,
+  POINTER_RADIUS,
+  createFrameLoop,
+  createPoints,
+  getPointCount,
+  getPointerOffset,
+  shouldAnimate,
+} from "@/components/home/neural-background";
 
 export default function NeuralBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,70 +25,116 @@ export default function NeuralBackground() {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    const points = createPoints(window.innerWidth < 640 ? 15 : 24);
-    const pointer = { x: 0.5, y: 0.5, active: false };
-    let frameId = 0;
-    let visible = true;
-    let lastFrame = 0;
+    let points = createPoints(0);
+    let positions = new Float32Array(0);
+    const nearestIndexes = new Int16Array(MAX_CURSOR_LINKS);
+    const nearestDistances = new Float32Array(MAX_CURSOR_LINKS);
+    const pointer = { x: 0, y: 0, active: false, strength: 0 };
+    let visible = false;
+    let drawCount = 0;
+    let requestCount = 0;
+
+    const updateDiagnostics = (scheduled: boolean) => {
+      canvas.dataset.rafActive = String(scheduled);
+      canvas.dataset.rafRequests = String(requestCount);
+      canvas.dataset.drawCount = String(drawCount);
+      canvas.dataset.pointerActive = String(pointer.active);
+    };
 
     const draw = (time: number) => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const elapsed = reduceMotion ? 0 : time * 0.00008;
-      const positions = points.map((point) => {
+      const pointerX = pointer.x * width;
+      const pointerY = pointer.y * height;
+      pointer.strength += ((pointer.active ? 1 : 0) - pointer.strength) * 0.08;
+
+      for (let index = 0; index < points.length; index += 1) {
+        const point = points[index];
         const driftX = Math.sin(elapsed * point.speed + point.phase) * 0.025;
         const driftY = Math.cos(elapsed * 0.8 * point.speed + point.phase) * 0.03;
         const baseX = (point.x + driftX) * width;
         const baseY = (point.y + driftY) * height;
-        const pointerX = pointer.x * width;
-        const pointerY = pointer.y * height;
-        const distance = Math.hypot(baseX - pointerX, baseY - pointerY);
-        const influence = pointer.active ? Math.max(0, 1 - distance / 300) * 10 : 0;
-
-        return {
-          x: baseX + (pointerX - baseX) * influence * 0.012,
-          y: baseY + (pointerY - baseY) * influence * 0.012,
-        };
-      });
+        const offset = getPointerOffset(baseX, baseY, pointerX, pointerY, pointer.strength);
+        positions[index * 2] = baseX + offset.x;
+        positions[index * 2 + 1] = baseY + offset.y;
+      }
 
       context.clearRect(0, 0, width, height);
       context.lineWidth = 1;
+      const threshold = Math.min(190, width * 0.22);
 
-      for (let index = 0; index < positions.length; index += 1) {
-        for (let otherIndex = index + 1; otherIndex < positions.length; otherIndex += 1) {
-          const from = positions[index];
-          const to = positions[otherIndex];
-          const distance = Math.hypot(from.x - to.x, from.y - to.y);
-          const threshold = Math.min(210, width * 0.24);
+      for (let index = 0; index < points.length; index += 1) {
+        for (let otherIndex = index + 1; otherIndex < points.length; otherIndex += 1) {
+          const fromX = positions[index * 2];
+          const fromY = positions[index * 2 + 1];
+          const toX = positions[otherIndex * 2];
+          const toY = positions[otherIndex * 2 + 1];
+          const distance = Math.hypot(fromX - toX, fromY - toY);
 
           if (distance > threshold) continue;
-          const gradient = context.createLinearGradient(from.x, from.y, to.x, to.y);
-          const alpha = (1 - distance / threshold) * 0.22;
-          gradient.addColorStop(0, `rgba(56, 189, 248, ${alpha})`);
-          gradient.addColorStop(1, `rgba(124, 58, 237, ${alpha})`);
-          context.strokeStyle = gradient;
+          context.globalAlpha = 1 - distance / threshold;
+          context.strokeStyle = PARTICLE_LINK_COLORS[(index + otherIndex) % PARTICLE_LINK_COLORS.length];
           context.beginPath();
-          context.moveTo(from.x, from.y);
-          context.lineTo(to.x, to.y);
+          context.moveTo(fromX, fromY);
+          context.lineTo(toX, toY);
           context.stroke();
         }
       }
 
-      positions.forEach((point, index) => {
+      if (pointer.strength > 0.01) {
+        nearestIndexes.fill(-1);
+        nearestDistances.fill(Infinity);
+        for (let index = 0; index < points.length; index += 1) {
+          const distance = Math.hypot(positions[index * 2] - pointerX, positions[index * 2 + 1] - pointerY);
+          if (distance >= POINTER_RADIUS || distance >= nearestDistances[MAX_CURSOR_LINKS - 1]) continue;
+          let slot = MAX_CURSOR_LINKS - 1;
+          while (slot > 0 && distance < nearestDistances[slot - 1]) {
+            nearestDistances[slot] = nearestDistances[slot - 1];
+            nearestIndexes[slot] = nearestIndexes[slot - 1];
+            slot -= 1;
+          }
+          nearestDistances[slot] = distance;
+          nearestIndexes[slot] = index;
+        }
+        context.lineWidth = 1.25;
+        context.strokeStyle = CURSOR_LINK_COLOR;
+        for (let slot = 0; slot < MAX_CURSOR_LINKS && nearestIndexes[slot] >= 0; slot += 1) {
+          const index = nearestIndexes[slot];
+          context.globalAlpha = (1 - nearestDistances[slot] / POINTER_RADIUS) * pointer.strength;
+          context.beginPath();
+          context.moveTo(positions[index * 2], positions[index * 2 + 1]);
+          context.lineTo(pointerX, pointerY);
+          context.stroke();
+        }
+      }
+
+      context.globalAlpha = 1;
+      for (let index = 0; index < points.length; index += 1) {
         const radius = index % 6 === 0 ? 2.8 : 1.8;
         context.fillStyle = index % 3 === 0 ? "rgba(167, 139, 250, 0.72)" : "rgba(103, 232, 249, 0.7)";
         context.beginPath();
-        context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        context.arc(positions[index * 2], positions[index * 2 + 1], radius, 0, Math.PI * 2);
         context.fill();
-      });
+      }
+
+      drawCount += 1;
+      updateDiagnostics(loop.isScheduled());
     };
 
-    const animate = (time: number) => {
-      if (visible && !document.hidden && time - lastFrame >= 33) {
-        draw(time);
-        lastFrame = time;
-      }
-      frameId = window.requestAnimationFrame(animate);
+    const loop = createFrameLoop({
+      request: (callback) => window.requestAnimationFrame(callback),
+      cancel: (frameId) => window.cancelAnimationFrame(frameId),
+      onFrame: draw,
+      onSchedule: () => {
+        requestCount += 1;
+        updateDiagnostics(true);
+      },
+    });
+
+    const syncAnimation = () => {
+      loop.setActive(shouldAnimate(visible, document.hidden, Boolean(reduceMotion)));
+      updateDiagnostics(loop.isScheduled());
     };
 
     const resize = () => {
@@ -102,37 +143,52 @@ export default function NeuralBackground() {
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      points = createPoints(getPointCount(width, height));
+      positions = new Float32Array(points.length * 2);
+      canvas.dataset.pointCount = String(points.length);
+      canvas.dataset.dpr = String(dpr);
       draw(performance.now());
     };
 
     const onPointerMove = (event: PointerEvent) => {
       const bounds = canvas.getBoundingClientRect();
-      pointer.active = event.clientX >= bounds.left && event.clientX <= bounds.right && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
-      if (pointer.active) {
-        pointer.x = (event.clientX - bounds.left) / bounds.width;
-        pointer.y = (event.clientY - bounds.top) / bounds.height;
-      }
+      pointer.active = true;
+      pointer.x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+      pointer.y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+      updateDiagnostics(loop.isScheduled());
+    };
+
+    const onPointerLeave = () => {
+      pointer.active = false;
+      updateDiagnostics(loop.isScheduled());
     };
 
     const resizeObserver = new ResizeObserver(resize);
     const intersectionObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
+      syncAnimation();
     });
+    const pointerTarget = canvas.parentElement ?? canvas;
 
     resizeObserver.observe(canvas);
     intersectionObserver.observe(canvas);
+    document.addEventListener("visibilitychange", syncAnimation);
     resize();
 
     if (!reduceMotion) {
-      window.addEventListener("pointermove", onPointerMove, { passive: true });
-      frameId = window.requestAnimationFrame(animate);
+      pointerTarget.addEventListener("pointerenter", onPointerMove, { passive: true });
+      pointerTarget.addEventListener("pointermove", onPointerMove, { passive: true });
+      pointerTarget.addEventListener("pointerleave", onPointerLeave, { passive: true });
     }
 
     return () => {
+      loop.dispose();
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
-      window.removeEventListener("pointermove", onPointerMove);
-      window.cancelAnimationFrame(frameId);
+      document.removeEventListener("visibilitychange", syncAnimation);
+      pointerTarget.removeEventListener("pointerenter", onPointerMove);
+      pointerTarget.removeEventListener("pointermove", onPointerMove);
+      pointerTarget.removeEventListener("pointerleave", onPointerLeave);
     };
   }, [reduceMotion]);
 

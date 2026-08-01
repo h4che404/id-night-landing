@@ -25,6 +25,8 @@ const TARGETS = [
 ];
 export const MOBILE_VIEWPORTS = [{ width: 320, height: 812 }, { width: 360, height: 800 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }];
 export const REGRESSION_VIEWPORTS = [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }];
+export const DESKTOP_NAV_VIEWPORTS = [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }];
+export const MOBILE_NAV_VIEWPORTS = [{ width: 320, height: 812 }, { width: 390, height: 844 }];
 
 export function parsePngDimensions(buffer) { if (buffer.length < 24 || !buffer.subarray(0, 8).equals(PNG)) throw new Error("Invalid PNG signature"); return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) }; }
 export function evaluateViewportFindings(width, findings) { const failures = []; let maxRight = -Infinity; for (const finding of findings) { if (finding.missing || !finding.rects?.length) { failures.push({ id: finding.id, reason: "Required target is missing or produced no measurable rects" }); continue; } for (const rect of finding.rects) { maxRight = Math.max(maxRight, rect.right); if (rect.left < 0) { failures.push({ id: finding.id, reason: `Required target crosses the left edge (${rect.left}px)`, rect }); break; } if (rect.right > width) { failures.push({ id: finding.id, reason: `Required target crosses the right edge (${rect.right}px > ${width}px)`, rect }); break; } } } return { pass: failures.length === 0, failures, maxRight: Number.isFinite(maxRight) ? maxRight : null }; }
@@ -64,6 +66,89 @@ async function cdp(port) {
 
 const metrics = (viewport) => ({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1, mobile: viewport.width <= 430, screenOrientation: viewport.height >= viewport.width ? { type: "portraitPrimary", angle: 0 } : { type: "landscapePrimary", angle: 90 } });
 async function prodShot(client, baseUrl, outputDir, viewport) { await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport)); await client.send("Page.navigate", { url: baseUrl }); await client.event("Page.loadEventFired"); await client.eval("Promise.resolve(document.fonts?.ready).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))"); await delay(1_000); const geometry = await client.eval(expr), png = Buffer.from((await client.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false })).data, "base64"), pngPath = path.join(outputDir, `home-prod-${fmt(viewport)}.png`), pngDimensions = parsePngDimensions(png), evaluation = evaluateViewportFindings(viewport.width, geometry.findings); fs.writeFileSync(pngPath, png); return { viewport, pngPath, pngDimensions, geometry, evaluation }; }
+async function probeExploreMenu(client, baseUrl, outputDir, viewport) {
+  await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport));
+  await client.send("Page.navigate", { url: baseUrl });
+  await client.event("Page.loadEventFired");
+  await delay(500);
+  client.drainEvents();
+  await client.eval(`(()=>{const trigger=Array.from(document.querySelectorAll('nav button')).find(node=>node.textContent?.includes('Explorar'));trigger?.focus();trigger?.click();return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))})()`);
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+  await delay(250);
+  const geometry = await client.eval(`(()=>{const panel=document.querySelector('#site-explore-menu'),cards=Array.from(panel?.querySelectorAll('section')??[]),rect=panel?.getBoundingClientRect(),active=document.activeElement;return{viewport:{width:innerWidth,height:innerHeight},expanded:document.querySelector('button[aria-controls="site-explore-menu"]')?.getAttribute('aria-expanded'),panel:rect?{left:+rect.left.toFixed(2),right:+rect.right.toFixed(2),top:+rect.top.toFixed(2),bottom:+rect.bottom.toFixed(2),clientHeight:panel.clientHeight,scrollHeight:panel.scrollHeight,overflowY:getComputedStyle(panel).overflowY}:null,cards:cards.map(card=>{const box=card.getBoundingClientRect();return{label:card.querySelector('h2')?.textContent?.trim(),top:+box.top.toFixed(2)}}),focused:{href:active?.getAttribute?.('href')??null,insidePanel:Boolean(panel?.contains(active))}}})()`);
+  const pngPath = path.join(outputDir, `nav-open-${fmt(viewport)}.png`);
+  fs.writeFileSync(pngPath, Buffer.from((await client.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false })).data, "base64"));
+  await client.eval(`document.querySelector('a[href="/#problema"]')?.click()`);
+  await delay(250);
+  const hashClosure = await client.eval(`({hash:location.hash,menuOpen:Boolean(document.querySelector('#site-explore-menu'))})`);
+  const runtimeEvents = client.drainEvents().filter((event) => event.method === "Runtime.exceptionThrown" || event.method === "Log.entryAdded" || (event.method === "Runtime.consoleAPICalled" && event.params?.type === "error"));
+  return { viewport, pngPath, geometry, hashClosure, runtimeEvents };
+}
+export function isExploreMenuPass(result) {
+  const { viewport, geometry, hashClosure, runtimeEvents } = result;
+  const rows = [...new Set(geometry.cards.map((card) => card.top))];
+  return geometry.expanded === "true" && geometry.panel && geometry.panel.left >= 0 && geometry.panel.right <= viewport.width && geometry.panel.top >= 0 && geometry.panel.bottom <= viewport.height && geometry.panel.overflowY === "auto" && geometry.cards.length === 5 && rows.length === 2 && geometry.cards.filter((card) => card.top === rows[0]).length === 3 && geometry.focused.insidePanel && geometry.focused.href === "/#vision" && hashClosure.hash === "#problema" && hashClosure.menuOpen === false && runtimeEvents.length === 0;
+}
+async function probeMobileMenu(client, baseUrl, outputDir, viewport) {
+  await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport));
+  await client.send("Page.navigate", { url: baseUrl });
+  await client.event("Page.loadEventFired");
+  await delay(500);
+  client.drainEvents();
+  await client.eval(`(()=>{const trigger=document.querySelector('button[aria-controls="site-mobile-menu"]');trigger?.focus();trigger?.click()})()`);
+  await delay(300);
+  const geometry = await client.eval(`(()=>{const panel=document.querySelector('#site-mobile-menu'),rect=panel?.getBoundingClientRect(),cards=Array.from(panel?.querySelectorAll('[data-explore-groups="mobile"] > section')??[]),firstLinks=Array.from(cards[0]?.querySelectorAll('a')??[]).slice(0,2).map(link=>{const box=link.getBoundingClientRect();return{left:+box.left.toFixed(2),top:+box.top.toFixed(2)}});return{expanded:document.querySelector('button[aria-controls="site-mobile-menu"]')?.getAttribute('aria-expanded'),panel:rect?{left:+rect.left.toFixed(2),right:+rect.right.toFixed(2),top:+rect.top.toFixed(2),bottom:+rect.bottom.toFixed(2),clientHeight:panel.clientHeight,scrollHeight:panel.scrollHeight,overflowY:getComputedStyle(panel).overflowY}:null,cards:cards.map(card=>card.querySelector('h2')?.textContent?.trim()),firstLinks,focusedText:document.activeElement?.textContent?.trim(),bodyOverflow:document.body.style.overflow}})()`);
+  const pngPath = path.join(outputDir, `mobile-nav-open-${fmt(viewport)}.png`);
+  fs.writeFileSync(pngPath, Buffer.from((await client.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false })).data, "base64"));
+  await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+  await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+  await delay(300);
+  const closure = await client.eval(`({menuOpen:Boolean(document.querySelector('#site-mobile-menu')),focusedControls:document.activeElement?.getAttribute?.('aria-controls')??null,bodyOverflow:document.body.style.overflow})`);
+  const runtimeEvents = client.drainEvents().filter((event) => event.method === "Runtime.exceptionThrown" || event.method === "Log.entryAdded" || (event.method === "Runtime.consoleAPICalled" && event.params?.type === "error"));
+  return { viewport, pngPath, geometry, closure, runtimeEvents };
+}
+export function isMobileMenuPass(result) {
+  const { viewport, geometry, closure, runtimeEvents } = result;
+  return geometry.expanded === "true" && geometry.panel && geometry.panel.left >= 0 && geometry.panel.right <= viewport.width && geometry.panel.top >= 0 && geometry.panel.bottom <= viewport.height && geometry.panel.overflowY === "auto" && geometry.panel.scrollHeight > geometry.panel.clientHeight && geometry.cards.length === 5 && geometry.firstLinks.length === 2 && geometry.firstLinks[0].top === geometry.firstLinks[1].top && geometry.firstLinks[0].left < geometry.firstLinks[1].left && geometry.focusedText === "Cerrar" && geometry.bodyOverflow === "hidden" && closure.menuOpen === false && closure.focusedControls === "site-mobile-menu" && closure.bodyOverflow === "" && runtimeEvents.length === 0;
+}
+async function probeNeuralBackground(client, baseUrl) {
+  await client.send("Emulation.setDeviceMetricsOverride", metrics({ width: 1440, height: 900 }));
+  await client.send("Page.navigate", { url: baseUrl });
+  await client.event("Page.loadEventFired");
+  await delay(600);
+  client.drainEvents();
+  const snapshot = () => client.eval(`(()=>{const canvas=document.querySelector('#vision canvas');return{pointCount:Number(canvas?.dataset.pointCount),drawCount:Number(canvas?.dataset.drawCount),rafRequests:Number(canvas?.dataset.rafRequests),rafActive:canvas?.dataset.rafActive,pointerActive:canvas?.dataset.pointerActive,dpr:Number(canvas?.dataset.dpr)}})()`);
+  await client.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 180, y: 330 });
+  await delay(400);
+  const interactive = await snapshot();
+  await client.eval(`scrollTo(0,document.querySelector('#problema').offsetTop+200)`);
+  await delay(400);
+  const offscreenStart = await snapshot();
+  await delay(350);
+  const offscreenEnd = await snapshot();
+  await client.eval("scrollTo(0,0)");
+  await delay(400);
+  const resumedStart = await snapshot();
+  await delay(350);
+  const resumedEnd = await snapshot();
+  await client.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await client.send("Page.navigate", { url: baseUrl });
+  await client.event("Page.loadEventFired");
+  await delay(400);
+  const reducedStart = await snapshot();
+  await client.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 180, y: 330 });
+  await delay(350);
+  const reducedEnd = await snapshot();
+  await client.send("Emulation.setEmulatedMedia", { features: [] });
+  const runtimeEvents = client.drainEvents().filter((event) => event.method === "Runtime.exceptionThrown" || event.method === "Log.entryAdded" || (event.method === "Runtime.consoleAPICalled" && event.params?.type === "error"));
+  return { viewport: { width: 1440, height: 900 }, interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents };
+}
+export function isNeuralBackgroundPass(result) {
+  const { interactive, offscreenStart, offscreenEnd, resumedStart, resumedEnd, reducedStart, reducedEnd, runtimeEvents } = result;
+  const resumedDraws = resumedEnd.drawCount - resumedStart.drawCount;
+  return interactive.pointCount >= 32 && interactive.pointCount <= 42 && interactive.pointerActive === "true" && interactive.rafActive === "true" && interactive.dpr <= 1.5 && offscreenStart.rafActive === "false" && offscreenEnd.rafRequests === offscreenStart.rafRequests && offscreenEnd.drawCount === offscreenStart.drawCount && resumedStart.rafActive === "true" && resumedEnd.rafRequests > resumedStart.rafRequests && resumedDraws >= 8 && resumedDraws <= 13 && reducedStart.rafActive === "false" && reducedEnd.rafRequests === reducedStart.rafRequests && reducedEnd.drawCount === reducedStart.drawCount && reducedEnd.pointerActive === "false" && runtimeEvents.length === 0;
+}
 async function probePinnedNarrative(client, baseUrl) {
   await client.send("Emulation.setDeviceMetricsOverride", metrics({ width: 1440, height: 900 }));
   await client.send("Page.navigate", { url: baseUrl });
@@ -96,20 +181,23 @@ async function probePinnedNarrative(client, baseUrl) {
 async function probeWindowSize(baseUrl, outputDir, chromePath, tempRoot, viewport, port) { const proc = launch(chromePath, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${path.join(tempRoot, `chrome-probe-${fmt(viewport)}`)}`, `--window-size=${viewport.width},${viewport.height}`, "about:blank"], path.join(outputDir, `chrome-probe-${fmt(viewport)}.log`)); let client; try { await waitFor(() => httpJson(`http://127.0.0.1:${port}/json/version`), `Chrome probe on ${port}`); client = await cdp(port); await client.send("Page.enable"); await client.send("Runtime.enable"); await client.send("Page.navigate", { url: baseUrl }); await client.event("Page.loadEventFired"); await delay(1_000); const viewportData = await client.eval("(()=>({innerWidth:window.innerWidth,visualViewportWidth:window.visualViewport?.width??null,devicePixelRatio:window.devicePixelRatio}))()"), cdpPng = parsePngDimensions(Buffer.from((await client.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false })).data, "base64")); return { metrics: viewportData, cdpPngWidth: cdpPng.width }; } finally { await client?.close().catch(() => undefined); await stop(proc); } }
 async function cliShot(baseUrl, outputDir, chromePath, tempRoot, viewport) { const screenshotPath = path.join(outputDir, `home-cli-${fmt(viewport)}.png`), proc = launch(chromePath, ["--headless=new", "--disable-gpu", `--user-data-dir=${path.join(tempRoot, `chrome-cli-${fmt(viewport)}`)}`, `--window-size=${viewport.width},${viewport.height}`, `--screenshot=${screenshotPath}`, baseUrl], path.join(outputDir, `chrome-cli-${fmt(viewport)}.log`)); try { await waitFor(() => fs.existsSync(screenshotPath), `CLI screenshot ${fmt(viewport)}`); return { screenshotPath, cliPngWidth: parsePngDimensions(fs.readFileSync(screenshotPath)).width }; } finally { await stop(proc); } }
 async function cliProof(baseUrl, outputDir, chromePath, tempRoot, viewport, port) { const probe = await probeWindowSize(baseUrl, outputDir, chromePath, tempRoot, viewport, port), shot = await cliShot(baseUrl, outputDir, chromePath, tempRoot, viewport); return { viewport, screenshotPath: shot.screenshotPath, metrics: probe.metrics, cdpPngWidth: probe.cdpPngWidth, cliPngWidth: shot.cliPngWidth, cropDetected: shot.cliPngWidth !== probe.metrics.innerWidth || shot.cliPngWidth !== probe.cdpPngWidth }; }
-const summary = (report) => ["# Homepage Mobile CDP Harness Summary", `Pass: ${report.pass ? "yes" : "no"}`, ...report.productionResults.map((r) => `prod ${fmt(r.viewport)} pass=${r.evaluation.pass} inner=${r.geometry.viewport.innerWidth} visual=${r.geometry.viewport.visualViewportWidth} png=${r.pngDimensions.width} maxRight=${r.evaluation.maxRight}`), report.pinnedNarrative ? `pin distance=${report.pinnedNarrative.bounds.distance} midTop=${report.pinnedNarrative.states[1].articleTop} releasedNextTop=${report.pinnedNarrative.states[2].nextContentTop} reverseTop=${report.pinnedNarrative.states[3].articleTop} reducedSpacer=${report.pinnedNarrative.reducedMotion.spacerExists} runtimeErrors=${report.pinnedNarrative.runtimeEvents.length}` : "pin not-run", ...report.cliProofResults.map((r) => `cli ${fmt(r.viewport)} inner=${r.metrics.innerWidth} visual=${r.metrics.visualViewportWidth} cdpPng=${r.cdpPngWidth} cliPng=${r.cliPngWidth} crop=${r.cropDetected}`), ...report.cleanup.map((line) => `cleanup ${line}`)].join("\n") + "\n";
+const summary = (report) => ["# Homepage Mobile CDP Harness Summary", `Pass: ${report.pass ? "yes" : "no"}`, ...report.productionResults.map((r) => `prod ${fmt(r.viewport)} pass=${r.evaluation.pass} inner=${r.geometry.viewport.innerWidth} visual=${r.geometry.viewport.visualViewportWidth} png=${r.pngDimensions.width} maxRight=${r.evaluation.maxRight}`), ...report.exploreMenuResults.map((r) => `nav ${fmt(r.viewport)} pass=${isExploreMenuPass(r)} panel=${r.geometry.panel?.clientHeight}/${r.geometry.panel?.scrollHeight} cards=${r.geometry.cards.length} focus=${r.geometry.focused.href} hashClose=${!r.hashClosure.menuOpen} runtimeErrors=${r.runtimeEvents.length}`), ...report.mobileMenuResults.map((r) => `mobile-nav ${fmt(r.viewport)} pass=${isMobileMenuPass(r)} panel=${r.geometry.panel?.clientHeight}/${r.geometry.panel?.scrollHeight} cards=${r.geometry.cards.length} focus=${r.geometry.focusedText} escapeClose=${!r.closure.menuOpen} runtimeErrors=${r.runtimeEvents.length}`), report.neuralBackground ? `neural pass=${isNeuralBackgroundPass(report.neuralBackground)} points=${report.neuralBackground.interactive.pointCount} offscreenRafDelta=${report.neuralBackground.offscreenEnd.rafRequests-report.neuralBackground.offscreenStart.rafRequests} resumedDraws=${report.neuralBackground.resumedEnd.drawCount-report.neuralBackground.resumedStart.drawCount} reducedDrawDelta=${report.neuralBackground.reducedEnd.drawCount-report.neuralBackground.reducedStart.drawCount} runtimeErrors=${report.neuralBackground.runtimeEvents.length}` : "neural not-run", report.pinnedNarrative ? `pin distance=${report.pinnedNarrative.bounds.distance} midTop=${report.pinnedNarrative.states[1].articleTop} releasedNextTop=${report.pinnedNarrative.states[2].nextContentTop} reverseTop=${report.pinnedNarrative.states[3].articleTop} reducedSpacer=${report.pinnedNarrative.reducedMotion.spacerExists} runtimeErrors=${report.pinnedNarrative.runtimeEvents.length}` : "pin not-run", ...report.cliProofResults.map((r) => `cli ${fmt(r.viewport)} inner=${r.metrics.innerWidth} visual=${r.metrics.visualViewportWidth} cdpPng=${r.cdpPngWidth} cliPng=${r.cliPngWidth} crop=${r.cropDetected}`), ...report.cleanup.map((line) => `cleanup ${line}`)].join("\n") + "\n";
 const isPinnedNarrativePass = ({ bounds, states, reducedMotion, runtimeEvents }) => bounds.distance === 1575 && states[0].articlePosition === "relative" && states[1].articlePosition === "fixed" && Math.abs(states[1].articleTop - 64) < 1 && states[1].pendingOpacity === 1 && states[2].articlePosition === "relative" && states[2].approvedOpacity === 1 && states[2].nextContentTop <= 900 && states[3].articlePosition === "fixed" && Math.abs(states[3].articleTop - 64) < 1 && states[4].spacerExists === false && reducedMotion.spacerExists === false && reducedMotion.deviceOpacity === 1 && reducedMotion.approvedOpacity === 1 && reducedMotion.progressScaleX === 1 && runtimeEvents.length === 0;
 
 async function main() {
-  const options = process.argv.slice(2).reduce((acc, arg) => { const [key, value] = arg.split(/=(.*)/s); if (key === "--output-dir") acc.outputDir = value; if (key === "--server-port") acc.serverPort = Number(value); if (key === "--cdp-port") acc.cdpPort = Number(value); return acc; }, { outputDir: OUT, serverPort: 3200, cdpPort: 9222 }), outputDir = resolveOutputDir(options.outputDir), tempRoot = path.join(outputDir, "temp"), baseUrl = `http://127.0.0.1:${options.serverPort}`, report = { startedAt: new Date().toISOString(), baseUrl, outputDir, commands: [], productionResults: [], cliProofResults: [], cleanup: [], pass: false };
+  const options = process.argv.slice(2).reduce((acc, arg) => { const [key, value] = arg.split(/=(.*)/s); if (key === "--output-dir") acc.outputDir = value; if (key === "--server-port") acc.serverPort = Number(value); if (key === "--cdp-port") acc.cdpPort = Number(value); return acc; }, { outputDir: OUT, serverPort: 3200, cdpPort: 9222 }), outputDir = resolveOutputDir(options.outputDir), tempRoot = path.join(outputDir, "temp"), baseUrl = `http://127.0.0.1:${options.serverPort}`, report = { startedAt: new Date().toISOString(), baseUrl, outputDir, commands: [], productionResults: [], exploreMenuResults: [], mobileMenuResults: [], cliProofResults: [], cleanup: [], pass: false };
   fs.rmSync(outputDir, { recursive: true, force: true }); fs.mkdirSync(outputDir, { recursive: true }); fs.mkdirSync(tempRoot, { recursive: true }); const chromePath = chrome(), reportPath = path.join(outputDir, "harness-report.json"), summaryPath = path.join(outputDir, "harness-summary.txt"), unbindSignals = wireSignalCleanup(); let server, browser, client;
   try {
     fs.rmSync(path.join(ROOT, ".next"), { recursive: true, force: true }); report.commands.push({ command: "rm -rf .next", exitCode: 0 }); report.commands.push(await run("npm", ["run", "build"], path.join(outputDir, "build.log")));
     server = launch("npm", ["run", "start", "--", "--hostname", "127.0.0.1", "--port", String(options.serverPort)], path.join(outputDir, `next-start-${options.serverPort}.log`)); await waitFor(async () => { if (server.child.exitCode !== null) throw new Error("next start exited early"); return (await fetch(baseUrl, { redirect: "manual" })).ok; }, baseUrl); report.cleanup.push(`next start pid=${server.child.pid}`);
     browser = launch(chromePath, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${options.cdpPort}`, `--user-data-dir=${path.join(tempRoot, "chrome-cdp-profile")}`, "about:blank"], path.join(outputDir, `chrome-cdp-${options.cdpPort}.log`)); await waitFor(() => httpJson(`http://127.0.0.1:${options.cdpPort}/json/version`), `Chrome debugger on ${options.cdpPort}`); client = await cdp(options.cdpPort); await client.send("Page.enable"); await client.send("Runtime.enable"); report.cleanup.push(`chrome cdp pid=${browser.child.pid}`);
     for (const viewport of [...MOBILE_VIEWPORTS, ...REGRESSION_VIEWPORTS]) report.productionResults.push(await prodShot(client, baseUrl, outputDir, viewport));
+    for (const viewport of DESKTOP_NAV_VIEWPORTS) report.exploreMenuResults.push(await probeExploreMenu(client, baseUrl, outputDir, viewport));
+    for (const viewport of MOBILE_NAV_VIEWPORTS) report.mobileMenuResults.push(await probeMobileMenu(client, baseUrl, outputDir, viewport));
+    report.neuralBackground = await probeNeuralBackground(client, baseUrl);
     report.pinnedNarrative = await probePinnedNarrative(client, baseUrl);
     for (const [i, viewport] of MOBILE_VIEWPORTS.filter((v) => v.width === 375 || v.width === 390).entries()) report.cliProofResults.push(await cliProof(baseUrl, outputDir, chromePath, tempRoot, viewport, options.cdpPort + 1 + i));
-    report.pass = report.productionResults.every(isProductionViewportPass) && isPinnedNarrativePass(report.pinnedNarrative) && report.cliProofResults.every((r) => r.cropDetected && r.metrics.innerWidth !== r.viewport.width && Math.round(r.metrics.visualViewportWidth ?? -1) !== r.viewport.width);
+    report.pass = report.productionResults.every(isProductionViewportPass) && report.exploreMenuResults.every(isExploreMenuPass) && report.mobileMenuResults.every(isMobileMenuPass) && isNeuralBackgroundPass(report.neuralBackground) && isPinnedNarrativePass(report.pinnedNarrative) && report.cliProofResults.every((r) => r.cropDetected && r.metrics.innerWidth !== r.viewport.width && Math.round(r.metrics.visualViewportWidth ?? -1) !== r.viewport.width);
   } catch (error) { report.error = error instanceof Error ? error.message : String(error); } finally {
     unbindSignals(); await client?.close().catch(() => undefined); const browserCleanup = await stop(browser), serverCleanup = await stop(server); fs.rmSync(tempRoot, { recursive: true, force: true }); report.cleanup.push(`chrome terminated=${browserCleanup.terminated} forced=${browserCleanup.forced}`, `server terminated=${serverCleanup.terminated} forced=${serverCleanup.forced}`, `temp removed=${tempRoot}`); fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`); fs.writeFileSync(summaryPath, summary(report), "utf8");
   }

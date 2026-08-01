@@ -14,20 +14,24 @@ const DESKTOP_NAV_ITEMS = [
 ] as const;
 const EXPLORE_GROUPS = [
   {
-    label: "Idea y propósito",
+    id: "initiative",
+    label: "La iniciativa",
+    description: "Por qué existe, qué creemos y quién la impulsa.",
     links: [
       { label: "Visión", href: "/#vision" },
       { label: "El problema", href: "/#problema" },
       { label: "Qué creemos", href: "/#principios" },
       { label: "A quiénes escuchamos", href: "/#actores" },
       { label: "Etapa actual", href: "/#etapa" },
-      { label: "Tecnología", href: "/#tecnologia" },
       { label: "Fundador", href: "/#fundador" },
     ],
   },
   {
-    label: "Ecosistema",
+    id: "technology",
+    label: "Tecnología",
+    description: "La plataforma, sus productos y herramientas.",
     links: [
+      { label: "Cómo funciona", href: "/#tecnologia" },
       { label: "Todos los productos", href: "/productos" },
       { label: "App del usuario", href: "/productos#app-usuario" },
       { label: "App de puerta", href: "/productos#app-puerta" },
@@ -38,7 +42,9 @@ const EXPLORE_GROUPS = [
     ],
   },
   {
-    label: "Soluciones y recursos",
+    id: "solutions",
+    label: "Soluciones",
+    description: "Propuestas para cada operación y tipo de espacio.",
     links: [
       { label: "Todas las soluciones", href: "/soluciones" },
       { label: "Boliches y bares", href: "/soluciones#boliches" },
@@ -47,6 +53,13 @@ const EXPLORE_GROUPS = [
       { label: "Usuarios finales", href: "/soluciones#usuarios" },
       { label: "Organizadores", href: "/soluciones#organizadores" },
       { label: "Precios", href: "/precios" },
+    ],
+  },
+  {
+    id: "resources",
+    label: "Recursos",
+    description: "Información, aprendizaje y canales de contacto.",
+    links: [
       { label: "Todos los recursos", href: "/recursos" },
       { label: "Aprender", href: "/recursos/aprender" },
       { label: "Empresa", href: "/recursos/empresa" },
@@ -56,7 +69,9 @@ const EXPLORE_GROUPS = [
     ],
   },
   {
+    id: "legal",
     label: "Legal",
+    description: "Privacidad y condiciones de uso.",
     links: [
       { label: "Política de privacidad", href: "/legal/privacidad" },
       { label: "Términos y condiciones", href: "/legal/terminos" },
@@ -182,7 +197,7 @@ export default function Navbar() {
           }}
         >
           {DESKTOP_NAV_ITEMS.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
+            <Link key={item.href} href={item.href} onClick={closeDesktopMenu} className="rounded-full px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
               {item.label}
             </Link>
           ))}
@@ -203,10 +218,6 @@ export default function Navbar() {
             Explorar
             <span aria-hidden="true" className={`text-xs transition-transform duration-200 motion-reduce:transition-none ${desktopOpen ? "rotate-180" : ""}`}>▾</span>
           </button>
-          <Link href="/#participar" className="ml-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
-            Participar
-          </Link>
-
           <AnimatePresence>
             {desktopOpen && (
               <motion.div
@@ -219,20 +230,20 @@ export default function Navbar() {
                 transition={{ duration: reduceMotion ? 0 : 0.18 }}
                 className="absolute inset-x-4 top-[calc(100%+0.5rem)] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-[28px] border border-white/10 bg-[#0F0F1A]/98 p-5 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:inset-x-6 xl:left-1/2 xl:right-auto xl:w-[min(1180px,calc(100vw-3rem))] xl:-translate-x-1/2"
               >
-                <div className="mb-4 flex items-end justify-between gap-6 border-b border-white/8 pb-4">
+                <div className="mb-4 border-b border-white/8 pb-4">
                   <div>
                     <p className="text-sm font-semibold text-white">Explorar ID-Night</p>
-                    <p className="mt-1 text-xs text-slate-500">La iniciativa, el ecosistema y las formas de participar.</p>
+                    <p className="mt-1 text-xs text-slate-400">Propósito, tecnología, soluciones y recursos en un solo lugar.</p>
                   </div>
-                  <Link href="/#participar" onClick={closeDesktopMenu} className="rounded-full border border-cyan-300/25 bg-cyan-300/8 px-4 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-300/14 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
-                    Sumate a la conversación
-                  </Link>
                 </div>
-                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[0.9fr_1fr_1.35fr_0.8fr]">
+                <div className="grid gap-3 lg:grid-cols-3" data-explore-groups="desktop">
                   {EXPLORE_GROUPS.map((group) => (
-                    <section key={group.label} aria-labelledby={`${DESKTOP_MENU_ID}-${group.label.replaceAll(" ", "-").toLowerCase()}`}>
-                      <h2 id={`${DESKTOP_MENU_ID}-${group.label.replaceAll(" ", "-").toLowerCase()}`} className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300/80">{group.label}</h2>
-                      <div className="grid gap-0.5">
+                    <section key={group.id} aria-labelledby={`${DESKTOP_MENU_ID}-${group.id}`} aria-describedby={`${DESKTOP_MENU_ID}-${group.id}-description`} className="rounded-2xl border border-white/8 bg-white/[0.025] p-3">
+                      <div className="mb-2 border-b border-white/8 px-2 pb-3">
+                        <h2 id={`${DESKTOP_MENU_ID}-${group.id}`} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300/80">{group.label}</h2>
+                        <p id={`${DESKTOP_MENU_ID}-${group.id}-description`} className="mt-1 text-xs leading-5 text-slate-400">{group.description}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-0.5">
                         {group.links.map((link) => {
                           const active = isCurrentRoute(pathname, link.href);
                           return <Link key={link.href} href={link.href} onClick={closeDesktopMenu} aria-current={active ? "page" : undefined} className={`rounded-xl px-3 py-2 text-sm leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none ${active ? "bg-white/8 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{link.label}</Link>;
@@ -241,9 +252,17 @@ export default function Navbar() {
                     </section>
                   ))}
                 </div>
+                <div className="mt-3 flex justify-end border-t border-white/8 pt-3">
+                  <Link href="/#participar" onClick={closeDesktopMenu} className="rounded-full border border-cyan-300/25 bg-cyan-300/8 px-4 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-300/14 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
+                    Sumate a la conversación
+                  </Link>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
+          <Link href="/#participar" onClick={closeDesktopMenu} className="ml-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none">
+            Participar
+          </Link>
         </nav>
 
         <button type="button" className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Abrir menú" aria-expanded={mobileOpen} aria-controls={MOBILE_MENU_ID}>
@@ -274,17 +293,19 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {EXPLORE_GROUPS.map((group) => (
-                <div key={group.label} className="border-t border-white/8 py-4 first:border-t-0 first:pt-0">
-                  <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{group.label}</p>
-                  <div className="grid gap-1 sm:grid-cols-2">
+              <div className="grid gap-2" data-explore-groups="mobile">
+                {EXPLORE_GROUPS.map((group) => (
+                  <section key={group.id} aria-labelledby={`${MOBILE_MENU_ID}-${group.id}`} className="rounded-2xl border border-white/8 bg-white/[0.025] p-2.5">
+                    <h2 id={`${MOBILE_MENU_ID}-${group.id}`} className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{group.label}</h2>
+                    <div className="grid grid-cols-2 gap-1">
                     {group.links.map((link) => {
                       const active = isCurrentRoute(pathname, link.href);
-                      return <Link key={link.href} href={link.href} onClick={closeMobileMenu} aria-current={active ? "page" : undefined} className={`rounded-lg px-3 py-2.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none ${active ? "bg-white/8 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{link.label}</Link>;
+                      return <Link key={link.href} href={link.href} onClick={closeMobileMenu} aria-current={active ? "page" : undefined} className={`rounded-lg px-2 py-2 text-sm leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transition-none ${active ? "bg-white/8 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{link.label}</Link>;
                     })}
-                  </div>
-                </div>
-              ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
 
               <Link href="/#participar" onClick={closeMobileMenu} className="mt-1 block rounded-full bg-white px-5 py-3 text-center text-sm font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
                 Participar
