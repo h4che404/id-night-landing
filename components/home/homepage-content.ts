@@ -25,11 +25,11 @@ export const homepageContent = {
   routes: { technology: "/productos", privacy: "/legal/privacidad", participation: "#participar" },
   hero: {
     id: "vision" as const,
-    eyebrow: "Desde Mendoza, construyendo una nueva forma de pensar la noche.",
-    title: "La noche que queremos se construye entre todos.",
-    description: "ID-NIGHT es una iniciativa tecnológica que trabaja junto con quienes salen, organizan, trabajan y cuidan para construir una nocturnidad más segura, responsable y respetuosa de la privacidad.",
-    primaryCta: { label: "Contanos tu experiencia", profile: "general" as const },
-    secondaryCta: { label: "Conocé lo que estamos construyendo", href: "/productos" },
+    eyebrow: "Tecnología en desarrollo, nacida en Mendoza.",
+    title: "Construimos tecnología para una noche más segura y humana.",
+    description: "ID-NIGHT ayuda a ordenar accesos, decisiones e incidentes sin perder de vista la privacidad ni el criterio humano.",
+    primaryCta: { label: "Conocé la iniciativa", href: "#problema" },
+    secondaryCta: { label: "Contanos tu experiencia", profile: "general" as const },
     status: "Actualmente estamos conversando con productores, espacios, trabajadores y referentes del sector.",
   },
   problem: {

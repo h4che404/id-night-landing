@@ -646,12 +646,12 @@ test("homepage content is centralized with the approved section order and exact 
   ]);
   assert.deepEqual(homepageContent.hero, {
     id: "vision",
-    eyebrow: "Desde Mendoza, construyendo una nueva forma de pensar la noche.",
-    title: "La noche que queremos se construye entre todos.",
+    eyebrow: "Tecnología en desarrollo, nacida en Mendoza.",
+    title: "Construimos tecnología para una noche más segura y humana.",
     description:
-      "ID-NIGHT es una iniciativa tecnológica que trabaja junto con quienes salen, organizan, trabajan y cuidan para construir una nocturnidad más segura, responsable y respetuosa de la privacidad.",
-    primaryCta: { label: "Contanos tu experiencia", profile: "general" },
-    secondaryCta: { label: "Conocé lo que estamos construyendo", href: "/productos" },
+      "ID-NIGHT ayuda a ordenar accesos, decisiones e incidentes sin perder de vista la privacidad ni el criterio humano.",
+    primaryCta: { label: "Conocé la iniciativa", href: "#problema" },
+    secondaryCta: { label: "Contanos tu experiencia", profile: "general" },
     status: "Actualmente estamos conversando con productores, espacios, trabajadores y referentes del sector.",
   });
   assert.equal(homepageContent.participation.id, "participar");
@@ -758,7 +758,7 @@ test("homepage route renders the approved narrative order, copy anchors, and JSO
 
   for (const copy of requiredCopy) assert.match(renderedText, new RegExp(escapeRegExp(copy)));
   for (const fragment of ['id="vision"', 'id="tecnologia"', 'id="participar"']) assert.match(html, new RegExp(fragment));
-  for (const href of ["/productos", "/legal/privacidad", "#participar"]) assert(anchors.some((anchor) => anchor.href === href));
+  for (const href of ["/productos", "/legal/privacidad", "#problema"]) assert(anchors.some((anchor) => anchor.href === href));
 
   const whatsappAnchors = anchors.filter((anchor) =>
     anchor.href.startsWith(`https://wa.me/${HOMEPAGE_WHATSAPP_CONFIG.waMeDigits}?text=`),
@@ -791,6 +791,9 @@ test("homepage route renders the approved narrative order, copy anchors, and JSO
     extractJsonLdObjects(html).some((entry) => entry["@type"] === "FAQPage"),
     false,
   );
+  assert.match(html, /<canvas[^>]*aria-hidden="true"/);
+  assert.match(html, /alt="Juan Cruz, fundador de ID-NIGHT, en Mendoza"/);
+  assert.match(html, /founder\.jpeg/);
 
   for (const forbiddenTerm of [
     ...FORBIDDEN_TERMS,
@@ -804,6 +807,25 @@ test("homepage route renders the approved narrative order, copy anchors, and JSO
       `Forbidden homepage schema term found: ${forbiddenTerm}`,
     );
   }
+});
+
+test("homepage motion isolates client behavior and honors reduced-motion and lifecycle contracts", () => {
+  const neuralSource = readProjectFile("components", "home", "NeuralBackground.tsx");
+  const revealSource = readProjectFile("components", "home", "Reveal.tsx");
+  const navbarSource = readProjectFile("components", "Navbar.tsx");
+
+  assert.match(neuralSource, /useReducedMotion\(\)/);
+  assert.match(neuralSource, /new IntersectionObserver/);
+  assert.match(neuralSource, /new ResizeObserver/);
+  assert.match(neuralSource, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
+  assert.match(neuralSource, /cancelAnimationFrame\(frameId\)/);
+  assert.match(neuralSource, /removeEventListener\("pointermove", onPointerMove\)/);
+  assert.match(revealSource, /initial=\{reduceMotion \? false/);
+  assert.match(revealSource, /viewport=\{\{ once: true/);
+  assert.match(navbarSource, /role="dialog"/);
+  assert.match(navbarSource, /event\.key === "Escape"/);
+  assert.match(navbarSource, /event\.key !== "Tab"/);
+  assert.match(navbarSource, /!href\.includes\("#"\)/);
 });
 
 test("footer keeps priority homepage access while preserving secondary routes", () => {

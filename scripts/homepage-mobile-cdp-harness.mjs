@@ -16,16 +16,12 @@ const real = (target) => fs.realpathSync.native?.(target) ?? fs.realpathSync(tar
 const inside = (parent, target) => { const relative = path.relative(parent, target); return !!relative && !path.isAbsolute(relative) && !relative.startsWith(".."); };
 const descendants = new Set();
 const TARGETS = [
-  { id: "hero-eyebrow", selector: "#vision p", text: "Desde Mendoza, construyendo una nueva forma de pensar la noche.", range: true },
+  { id: "hero-eyebrow", selector: "#vision p", text: "Tecnología en desarrollo, nacida en Mendoza.", range: true },
   { id: "hero-title", selector: "#home-vision-title", range: true },
-  { id: "hero-description", selector: "#vision p", text: "ID-NIGHT es una iniciativa tecnológica que trabaja junto con quienes salen, organizan, trabajan y cuidan para construir una nocturnidad más segura, responsable y respetuosa de la privacidad.", range: true },
-  { id: "primary-cta", selector: '#vision a[href^="https://wa.me/"]' },
-  { id: "secondary-cta", selector: '#vision a[href="/productos"]' },
-  { id: "hero-status", selector: "#vision p", text: "Actualmente estamos conversando con productores, espacios, trabajadores y referentes del sector.", range: true },
-  { id: "context-row", selector: '#vision a[href="#participar"]', parent: true },
-  { id: "context-link-participation", selector: '#vision a[href="#participar"]' },
-  { id: "context-link-privacy", selector: '#vision a[href="/legal/privacidad"]' },
-  { id: "media-card", selector: '[role="img"][aria-label="Ilustración editorial abstracta de una noche mendocina. Placeholder no fotográfico hasta contar con una imagen real."]' },
+  { id: "hero-description", selector: "#vision p", text: "ID-NIGHT ayuda a ordenar accesos, decisiones e incidentes sin perder de vista la privacidad ni el criterio humano.", range: true },
+  { id: "primary-cta", selector: '#vision a[href="#problema"]' },
+  { id: "secondary-cta", selector: '#vision a[href^="https://wa.me/"]' },
+  { id: "neural-background", selector: '#vision canvas[aria-hidden="true"]' },
 ];
 export const MOBILE_VIEWPORTS = [{ width: 320, height: 812 }, { width: 360, height: 800 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }];
 export const REGRESSION_VIEWPORTS = [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }];
