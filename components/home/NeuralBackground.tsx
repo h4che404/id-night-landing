@@ -15,6 +15,7 @@ import {
   PARTICLE_NODE_COLORS,
   PARTICLE_LINK_COLORS,
   POINTER_RADIUS,
+  TOUCH_SCROLL_IDLE_MS,
   createFrameLoop,
   createPoints,
   getCappedDpr,
@@ -45,7 +46,11 @@ export default function NeuralBackground() {
       () => [] as number[],
     );
     const pointer = { x: 0, y: 0, active: false, strength: 0 };
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
     let visible = false;
+    let touchActive = false;
+    let touchScrollPaused = false;
+    let scrollResumeTimer: number | null = null;
     let drawCount = 0;
     let requestCount = 0;
 
@@ -54,6 +59,8 @@ export default function NeuralBackground() {
       canvas.dataset.rafRequests = String(requestCount);
       canvas.dataset.drawCount = String(drawCount);
       canvas.dataset.pointerActive = String(pointer.active);
+      canvas.dataset.scrollPaused = String(touchScrollPaused);
+      canvas.dataset.scrollOptimized = String(coarsePointer);
     };
 
     const draw = (time: number) => {
@@ -186,8 +193,32 @@ export default function NeuralBackground() {
     });
 
     const syncAnimation = () => {
-      loop.setActive(shouldAnimate(visible, document.hidden, Boolean(reduceMotion)));
+      loop.setActive(shouldAnimate(visible, document.hidden, Boolean(reduceMotion), touchScrollPaused));
       updateDiagnostics(loop.isScheduled());
+    };
+
+    const resumeAfterScroll = () => {
+      if (!touchScrollPaused || touchActive) return;
+      if (scrollResumeTimer !== null) window.clearTimeout(scrollResumeTimer);
+      scrollResumeTimer = window.setTimeout(() => {
+        scrollResumeTimer = null;
+        touchScrollPaused = false;
+        syncAnimation();
+      }, TOUCH_SCROLL_IDLE_MS);
+    };
+
+    const pauseForTouchScroll = () => {
+      if (!coarsePointer) return;
+      touchActive = true;
+      touchScrollPaused = true;
+      if (scrollResumeTimer !== null) window.clearTimeout(scrollResumeTimer);
+      scrollResumeTimer = null;
+      syncAnimation();
+    };
+
+    const endTouchScroll = () => {
+      touchActive = false;
+      resumeAfterScroll();
     };
 
     const resize = () => {
@@ -226,6 +257,12 @@ export default function NeuralBackground() {
     resizeObserver.observe(canvas);
     intersectionObserver.observe(canvas);
     document.addEventListener("visibilitychange", syncAnimation);
+    if (coarsePointer) {
+      pointerTarget.addEventListener("touchstart", pauseForTouchScroll, { passive: true });
+      pointerTarget.addEventListener("touchend", endTouchScroll, { passive: true });
+      pointerTarget.addEventListener("touchcancel", endTouchScroll, { passive: true });
+      window.addEventListener("scroll", resumeAfterScroll, { passive: true });
+    }
     resize();
 
     if (!reduceMotion) {
@@ -239,6 +276,11 @@ export default function NeuralBackground() {
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener("visibilitychange", syncAnimation);
+      if (scrollResumeTimer !== null) window.clearTimeout(scrollResumeTimer);
+      pointerTarget.removeEventListener("touchstart", pauseForTouchScroll);
+      pointerTarget.removeEventListener("touchend", endTouchScroll);
+      pointerTarget.removeEventListener("touchcancel", endTouchScroll);
+      window.removeEventListener("scroll", resumeAfterScroll);
       pointerTarget.removeEventListener("pointerenter", onPointerMove);
       pointerTarget.removeEventListener("pointermove", onPointerMove);
       pointerTarget.removeEventListener("pointerleave", onPointerLeave);

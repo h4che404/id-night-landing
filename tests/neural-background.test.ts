@@ -25,6 +25,7 @@ import {
   PARTICLE_NODE_RADIUS,
   POINTER_MAX_OFFSET,
   POINTER_RADIUS,
+  TOUCH_SCROLL_IDLE_MS,
   createFrameLoop,
   createPoints,
   getCappedDpr,
@@ -158,13 +159,21 @@ test("animation policy and component contracts cover visibility, reduced motion,
   assert.equal(shouldAnimate(false, false, false), false);
   assert.equal(shouldAnimate(true, true, false), false);
   assert.equal(shouldAnimate(true, false, true), false);
+  assert.equal(shouldAnimate(true, false, false, true), false);
   assert.equal(FRAME_INTERVAL, 1000 / 60);
+  assert.equal(TOUCH_SCROLL_IDLE_MS, 140);
   assert.match(componentSource, /document\.addEventListener\("visibilitychange", syncAnimation\)/);
   assert.match(componentSource, /document\.removeEventListener\("visibilitychange", syncAnimation\)/);
   assert.match(componentSource, /loop\.dispose\(\)/);
   assert.match(componentSource, /resizeObserver\.disconnect\(\)/);
   assert.match(componentSource, /intersectionObserver\.disconnect\(\)/);
   assert.match(componentSource, /if \(!reduceMotion\) \{[\s\S]*pointerTarget\.addEventListener/);
+  assert.match(componentSource, /matchMedia\("\(pointer: coarse\)"\)/);
+  assert.match(componentSource, /pointerTarget\.addEventListener\("touchstart", pauseForTouchScroll/);
+  assert.match(componentSource, /if \(!touchScrollPaused \|\| touchActive\) return/);
+  assert.match(componentSource, /pointerTarget\.addEventListener\("touchend", endTouchScroll/);
+  assert.match(componentSource, /window\.addEventListener\("scroll", resumeAfterScroll/);
+  assert.match(componentSource, /window\.removeEventListener\("scroll", resumeAfterScroll\)/);
   assert.doesNotMatch(componentSource, /window\.addEventListener\("pointermove"/);
 });
 

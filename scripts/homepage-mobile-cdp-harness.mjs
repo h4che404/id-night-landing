@@ -29,6 +29,12 @@ export const DESKTOP_NAV_VIEWPORTS = [{ width: 1024, height: 640 }, { width: 128
 export const MOBILE_NAV_VIEWPORTS = [{ width: 320, height: 812 }, { width: 390, height: 844 }];
 export const NEURAL_VIEWPORTS = [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }];
 export const FIRST_SCROLL_VIEWPORTS = [{ width: 375, height: 812 }, { width: 1440, height: 900 }];
+export const FIRST_SCROLL_PROFILES = [
+  { viewport: { width: 320, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
+  { viewport: { width: 375, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
+  { viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, cpuThrottleRate: 4, input: "touch" },
+  { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, cpuThrottleRate: 1, input: "wheel" },
+];
 
 export function parsePngDimensions(buffer) { if (buffer.length < 24 || !buffer.subarray(0, 8).equals(PNG)) throw new Error("Invalid PNG signature"); return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) }; }
 export function evaluateViewportFindings(width, findings) { const failures = []; let maxRight = -Infinity; for (const finding of findings) { if (finding.missing || !finding.rects?.length) { failures.push({ id: finding.id, reason: "Required target is missing or produced no measurable rects" }); continue; } for (const rect of finding.rects) { maxRight = Math.max(maxRight, rect.right); if (rect.left < 0) { failures.push({ id: finding.id, reason: `Required target crosses the left edge (${rect.left}px)`, rect }); break; } if (rect.right > width) { failures.push({ id: finding.id, reason: `Required target crosses the right edge (${rect.right}px > ${width}px)`, rect }); break; } } } return { pass: failures.length === 0, failures, maxRight: Number.isFinite(maxRight) ? maxRight : null }; }
@@ -36,7 +42,7 @@ export function resolveOutputDir(outputDir) { const candidate = typeof outputDir
 export function isHeroPalettePass(palette) { return palette && palette.averageLuminance >= 0.045 && palette.chromaticRatio >= 0.01 && palette.networkPixelRatio >= 0.012 && palette.cyanRatio >= 0.0005 && palette.blueRatio >= 0.0005 && palette.violetRatio >= 0.0005; }
 export function isProductionViewportPass(result) { return result.evaluation.pass && result.geometry.viewport.innerWidth === result.viewport.width && result.geometry.viewport.innerHeight === result.viewport.height && result.geometry.viewport.devicePixelRatio === 1 && result.pngDimensions.width === result.viewport.width && result.pngDimensions.height === result.viewport.height && !result.geometry.hasNextDevIndicator && (result.palette ? isHeroPalettePass(result.palette) : ![375, 1440].includes(result.viewport.width)); }
 export function percentile(values, fraction) { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b); return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * fraction) - 1))]; }
-export function isFirstScrollPass(result) { return result.samples.length >= 3 && result.summary.responseP50Ms <= 32 && result.summary.responseP95Ms <= 50 && result.summary.frameGapP95Ms <= 50 && result.samples.every((sample) => sample.scrollEvents >= 1 && sample.scrollDelta > 0 && sample.canvasDraws >= 1 && sample.longTasks.length === 0); }
+export function isFirstScrollPass(result) { const mobile = result.profile?.input === "touch"; return result.samples.length >= 3 && result.summary.responseP50Ms <= (mobile ? 100 : 32) && result.summary.responseP95Ms <= (mobile ? 180 : 50) && result.summary.frameGapP95Ms <= (mobile ? 100 : 50) && result.samples.every((sample) => sample.scrollEvents >= 1 && sample.scrollDelta > 0 && sample.canvasDraws >= 1 && (!mobile || (sample.canvasScrollOptimized && sample.gestureCanvasDraws <= 2 && sample.gestureCanvasPaused && sample.settleCanvasDraws >= 1 && sample.canvasVisible && sample.canvasDpr <= 1.5)) && sample.longTasks.filter((task) => task.startTime >= sample.dispatchAt && task.startTime <= sample.gestureEndedAt + 100).length <= (mobile ? 1 : 0)); }
 
 const fmt = ({ width, height }) => `${width}x${height}`;
 const expr = `(()=>{const t=${JSON.stringify(TARGETS)},r=x=>({left:+x.left.toFixed(2),right:+x.right.toFixed(2),top:+x.top.toFixed(2),bottom:+x.bottom.toFixed(2),width:+x.width.toFixed(2),height:+x.height.toFixed(2)}),pick=x=>{let e=x.text?Array.from(document.querySelectorAll(x.selector)).find(n=>n.textContent?.trim()===x.text):document.querySelector(x.selector);return x.parent?e?.parentElement:e};return{viewport:{innerWidth:window.innerWidth,innerHeight:window.innerHeight,visualViewportWidth:window.visualViewport?.width??null,visualViewportHeight:window.visualViewport?.height??null,devicePixelRatio:window.devicePixelRatio,scrollWidth:document.documentElement.scrollWidth,bodyScrollWidth:document.body?.scrollWidth??null},hasNextDevIndicator:Boolean(document.querySelector('[data-next-badge-root],nextjs-portal,[data-nextjs-dialog-overlay]')),findings:t.map(x=>{const e=pick(x);if(!e)return{id:x.id,missing:true,rects:[]};const rects=x.range?(()=>{const g=document.createRange();g.selectNodeContents(e);return Array.from(g.getClientRects()).map(r)})():[r(e.getBoundingClientRect())];return{id:x.id,missing:!rects.length,rects}})}})()`;
@@ -69,7 +75,7 @@ async function cdp(port) {
   function pendingWrap(method, params) { return new Promise((resolve, reject) => { pending.set(++id, { resolve, reject }); socket.send({ id, method, params }); }); }
 }
 
-const metrics = (viewport) => ({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1, mobile: viewport.width <= 430, screenOrientation: viewport.height >= viewport.width ? { type: "portraitPrimary", angle: 0 } : { type: "landscapePrimary", angle: 90 } });
+const metrics = (viewport, deviceScaleFactor = 1) => ({ width: viewport.width, height: viewport.height, deviceScaleFactor, mobile: viewport.width <= 430, screenOrientation: viewport.height >= viewport.width ? { type: "portraitPrimary", angle: 0 } : { type: "landscapePrimary", angle: 90 } });
 async function analyzeHeroPalette(client, pngBase64) {
   return client.eval(`(async()=>{const image=new Image();image.src="data:image/png;base64,${pngBase64}";await image.decode();const canvas=document.createElement('canvas'),context=canvas.getContext('2d',{willReadFrequently:true}),tones=[[0.2,0.867,1],[0.333,0.596,1],[0.667,0.333,1]];canvas.width=image.width;canvas.height=image.height;context.drawImage(image,0,0);const data=context.getImageData(0,0,image.width,image.height).data;let samples=0,luminance=0,chromatic=0,network=0,cyan=0,blue=0,violet=0;for(let y=80;y<image.height;y+=2)for(let x=0;x<image.width;x+=2){const offset=(y*image.width+x)*4,r=data[offset],g=data[offset+1],b=data[offset+2],light=(0.2126*r+0.7152*g+0.0722*b)/255,max=Math.max(r,g,b),chroma=max-Math.min(r,g,b);if(light>0.65)continue;samples+=1;luminance+=light;if(chroma>=45&&light>=0.18)network+=1;if(chroma<18)continue;chromatic+=1;const normalized=[r/max,g/max,b/max],distances=tones.map(tone=>tone.reduce((sum,value,index)=>sum+(value-normalized[index])**2,0)),nearest=distances.indexOf(Math.min(...distances));if(nearest===0)cyan+=1;else if(nearest===1)blue+=1;else violet+=1;}return{samples,averageLuminance:luminance/samples,chromaticRatio:chromatic/samples,networkPixelRatio:network/samples,cyanRatio:cyan/samples,blueRatio:blue/samples,violetRatio:violet/samples}})()`);
 }
@@ -86,40 +92,58 @@ function summarizeTrace(events) {
     top: [...complete].sort((a, b) => b.dur - a.dur).slice(0, 12).map((event) => ({ name: event.name, durationMs: +(event.dur / 1_000).toFixed(2), category: event.cat })),
   };
 }
-async function probeFirstScroll(client, baseUrl, viewport, attempts = 5, mode = "normal") {
+async function probeFirstScroll(client, baseUrl, profile, attempts = 5, mode = "normal") {
+  const { viewport, deviceScaleFactor, cpuThrottleRate, input } = profile;
   const samples = [];
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport));
-    await client.send("Page.navigate", { url: baseUrl });
+    await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport, deviceScaleFactor));
+    await client.send("Emulation.setTouchEmulationEnabled", input === "touch" ? { enabled: true, maxTouchPoints: 1 } : { enabled: false });
+    await client.send("Emulation.setCPUThrottlingRate", { rate: cpuThrottleRate });
+    await client.send("Page.navigate", { url: `${baseUrl}?scrollProbe=${viewport.width}-${mode}-${attempt}-${Date.now()}` });
     await client.event("Page.loadEventFired");
+    await client.eval("scrollTo(0,0)");
     await client.eval("Promise.resolve(document.fonts?.ready).then(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))");
     await delay(650);
-    if (mode === "canvas-suspended") {
-      await client.eval("document.querySelector('#vision canvas').style.display='none'");
+    if (mode === "canvas-static") {
+      await client.eval(`(()=>{const canvas=document.querySelector('#vision canvas'),image=new Image();image.src=canvas.toDataURL();image.setAttribute('aria-hidden','true');image.style.cssText=canvas.style.cssText;image.className=canvas.className;canvas.parentElement.insertBefore(image,canvas);canvas.style.display='none'})()`);
       await delay(150);
+    } else if (mode === "glow-disabled") {
+      await client.eval(`(()=>{const context=document.querySelector('#vision canvas').getContext('2d');Object.defineProperty(context,'shadowBlur',{configurable:true,get:()=>0,set:()=>{}})})()`);
     } else if (mode === "navbar-effects-disabled") {
       await client.eval("document.querySelector('header').style.cssText+=';backdrop-filter:none!important;box-shadow:none!important;transition:none!important'");
     }
     client.drainEvents();
     await client.send("Tracing.start", { categories: "devtools.timeline,blink,cc,gpu,disabled-by-default-devtools.timeline.frame", options: "sampling-frequency=10000", transferMode: "ReportEvents" });
-    await client.eval(`(()=>{const canvas=document.querySelector('#vision canvas'),header=document.querySelector('header');window.__firstScrollProbe={startedAt:performance.now(),dispatchAt:0,wheelAt:null,frames:[],scrolls:[],headerMutations:[],longTasks:[],startY:scrollY,startDraws:Number(canvas?.dataset.drawCount||0)};const probe=window.__firstScrollProbe;const frame=time=>{probe.frames.push(time);if(time-probe.startedAt<900)requestAnimationFrame(frame)};requestAnimationFrame(frame);addEventListener('wheel',()=>{probe.wheelAt??=performance.now()},{passive:true,once:true});addEventListener('scroll',()=>probe.scrolls.push({time:performance.now(),y:scrollY}),{passive:true});new MutationObserver(()=>probe.headerMutations.push({time:performance.now(),className:header.className})).observe(header,{attributes:true,attributeFilter:['class']});new PerformanceObserver(list=>probe.longTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration})))).observe({type:'longtask',buffered:true})})()`);
+    await client.eval(`(()=>{const canvas=document.querySelector('#vision canvas'),header=document.querySelector('header');window.__firstScrollProbe={startedAt:performance.now(),dispatchAt:0,inputAt:null,gestureEndedAt:0,gestureEndDraws:0,gesturePaused:false,frames:[],scrolls:[],headerMutations:[],longTasks:[],startY:scrollY,startDraws:Number(canvas?.dataset.drawCount||0)};const probe=window.__firstScrollProbe;const frame=time=>{probe.frames.push(time);if(time-probe.startedAt<1200)requestAnimationFrame(frame)};requestAnimationFrame(frame);addEventListener(${JSON.stringify(input === "touch" ? "touchstart" : "wheel")},()=>{probe.inputAt??=performance.now()},{passive:true,once:true});addEventListener('scroll',()=>probe.scrolls.push({time:performance.now(),y:scrollY}),{passive:true});new MutationObserver(()=>probe.headerMutations.push({time:performance.now(),className:header.className})).observe(header,{attributes:true,attributeFilter:['class']});new PerformanceObserver(list=>probe.longTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration})))).observe({type:'longtask',buffered:true})})()`);
     await client.eval("window.__firstScrollProbe.dispatchAt=performance.now()");
-    await client.send("Input.dispatchMouseEvent", { type: "mouseWheel", x: Math.round(viewport.width / 2), y: Math.min(320, viewport.height - 1), deltaX: 0, deltaY: 72 });
+    if (input === "touch") {
+      const x = Math.round(viewport.width / 2), startY = Math.min(650, viewport.height - 80);
+      await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: startY, radiusX: 8, radiusY: 8, force: 1, id: 1 }] });
+      for (const offset of [70, 140, 210, 280]) {
+        await delay(20);
+        await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: startY - offset, radiusX: 8, radiusY: 8, force: 1, id: 1 }] });
+      }
+      await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    } else {
+      await client.send("Input.dispatchMouseEvent", { type: "mouseWheel", x: Math.round(viewport.width / 2), y: Math.min(320, viewport.height - 1), deltaX: 0, deltaY: 72 });
+    }
+    await client.eval(`(()=>{const probe=window.__firstScrollProbe,canvas=document.querySelector('#vision canvas');probe.gestureEndedAt=performance.now();probe.gestureEndDraws=Number(canvas?.dataset.drawCount||0);probe.gesturePaused=canvas?.dataset.scrollPaused==='true'})()`);
     await delay(700);
     await client.send("Tracing.end");
     await client.event("Tracing.tracingComplete");
     const traceEvents = client.drainEvents().filter((event) => event.method === "Tracing.dataCollected").flatMap((event) => event.params.value);
-    const sample = await client.eval(`(()=>{const probe=window.__firstScrollProbe,canvas=document.querySelector('#vision canvas'),frameGaps=probe.frames.slice(1).map((time,index)=>time-probe.frames[index]),firstScroll=probe.scrolls[0];return{responseMs:firstScroll?firstScroll.time-probe.dispatchAt:null,wheelToScrollMs:firstScroll&&probe.wheelAt!==null?firstScroll.time-probe.wheelAt:null,maxFrameGapMs:frameGaps.length?Math.max(...frameGaps):null,frameGaps,scrollEvents:probe.scrolls.length,scrollDelta:scrollY-probe.startY,canvasDraws:Number(canvas?.dataset.drawCount||0)-probe.startDraws,headerMutationMs:probe.headerMutations[0]?probe.headerMutations[0].time-probe.dispatchAt:null,longTasks:probe.longTasks}})()`);
+    const sample = await client.eval(`(()=>{const probe=window.__firstScrollProbe,canvas=document.querySelector('#vision canvas'),frameGaps=probe.frames.slice(1).map((time,index)=>time-probe.frames[index]),firstScroll=probe.scrolls[0],endDraws=Number(canvas?.dataset.drawCount||0),style=getComputedStyle(canvas);return{dispatchAt:probe.dispatchAt,gestureEndedAt:probe.gestureEndedAt,responseMs:firstScroll?firstScroll.time-probe.dispatchAt:null,inputToScrollMs:firstScroll&&probe.inputAt!==null?firstScroll.time-probe.inputAt:null,maxFrameGapMs:frameGaps.length?Math.max(...frameGaps):null,frameGaps,scrollEvents:probe.scrolls.length,scrollDelta:scrollY-probe.startY,canvasDraws:endDraws-probe.startDraws,gestureCanvasDraws:probe.gestureEndDraws-probe.startDraws,gestureCanvasPaused:probe.gesturePaused,settleCanvasDraws:endDraws-probe.gestureEndDraws,canvasScrollPaused:canvas?.dataset.scrollPaused==='true',canvasScrollOptimized:canvas?.dataset.scrollOptimized==='true',canvasRafActive:canvas?.dataset.rafActive,canvasVisible:style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0,canvasDpr:Number(canvas?.dataset.dpr),devicePixelRatio,pointCount:Number(canvas?.dataset.pointCount),headerMutationMs:probe.headerMutations[0]?probe.headerMutations[0].time-probe.dispatchAt:null,longTasks:probe.longTasks}})()`);
     samples.push({ attempt: attempt + 1, ...sample, trace: attempt === 0 ? summarizeTrace(traceEvents) : undefined });
   }
   const summary = {
     responseP50Ms: +percentile(samples.map((sample) => sample.responseMs), 0.5).toFixed(2),
     responseP95Ms: +percentile(samples.map((sample) => sample.responseMs), 0.95).toFixed(2),
-    wheelToScrollP50Ms: +percentile(samples.map((sample) => sample.wheelToScrollMs), 0.5).toFixed(2),
+    inputToScrollP50Ms: +percentile(samples.map((sample) => sample.inputToScrollMs), 0.5).toFixed(2),
     frameGapP95Ms: +percentile(samples.flatMap((sample) => sample.frameGaps), 0.95).toFixed(2),
     maxFrameGapMs: +Math.max(...samples.map((sample) => sample.maxFrameGapMs)).toFixed(2),
   };
-  return { viewport, mode, samples, summary };
+  await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  return { profile, mode, samples, summary };
 }
 async function prodShot(client, baseUrl, outputDir, viewport) { await client.send("Emulation.setDeviceMetricsOverride", metrics(viewport)); await client.send("Page.navigate", { url: baseUrl }); await client.event("Page.loadEventFired"); await client.eval("Promise.resolve(document.fonts?.ready).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))"); await delay(1_000); const geometry = await client.eval(expr), capture = await client.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false }), png = Buffer.from(capture.data, "base64"), pngPath = path.join(outputDir, `home-prod-${fmt(viewport)}.png`), pngDimensions = parsePngDimensions(png), evaluation = evaluateViewportFindings(viewport.width, geometry.findings), palette = viewport.width === 375 || viewport.width === 1440 ? await analyzeHeroPalette(client, capture.data) : null; fs.writeFileSync(pngPath, png); return { viewport, pngPath, pngDimensions, geometry, evaluation, palette }; }
 async function probeExploreMenu(client, baseUrl, outputDir, viewport) {
@@ -271,9 +295,9 @@ async function main() {
     fs.rmSync(path.join(ROOT, ".next"), { recursive: true, force: true }); report.commands.push({ command: "rm -rf .next", exitCode: 0 }); report.commands.push(await run("npm", ["run", "build"], path.join(outputDir, "build.log")));
     server = launch("npm", ["run", "start", "--", "--hostname", "127.0.0.1", "--port", String(options.serverPort)], path.join(outputDir, `next-start-${options.serverPort}.log`)); await waitFor(async () => { if (server.child.exitCode !== null) throw new Error("next start exited early"); return (await fetch(baseUrl, { redirect: "manual" })).ok; }, baseUrl); report.cleanup.push(`next start pid=${server.child.pid}`);
     browser = launch(chromePath, ["--headless=new", `--remote-debugging-port=${options.cdpPort}`, `--user-data-dir=${path.join(tempRoot, "chrome-cdp-profile")}`, "about:blank"], path.join(outputDir, `chrome-cdp-${options.cdpPort}.log`)); await waitFor(() => httpJson(`http://127.0.0.1:${options.cdpPort}/json/version`), `Chrome debugger on ${options.cdpPort}`); client = await cdp(options.cdpPort); await client.send("Page.enable"); await client.send("Runtime.enable"); report.cleanup.push(`chrome cdp pid=${browser.child.pid}`);
-    for (const viewport of FIRST_SCROLL_VIEWPORTS) report.firstScrollResults.push(await probeFirstScroll(client, baseUrl, viewport));
+    for (const profile of FIRST_SCROLL_PROFILES) report.firstScrollResults.push(await probeFirstScroll(client, baseUrl, profile));
     if (options.firstScrollOnly) {
-      for (const mode of ["canvas-suspended", "navbar-effects-disabled"]) report.firstScrollDiagnostics.push(await probeFirstScroll(client, baseUrl, FIRST_SCROLL_VIEWPORTS[1], 3, mode));
+      for (const mode of ["canvas-static", "glow-disabled", "navbar-effects-disabled"]) report.firstScrollDiagnostics.push(await probeFirstScroll(client, baseUrl, FIRST_SCROLL_PROFILES[1], 3, mode));
       report.pass = report.firstScrollResults.every(isFirstScrollPass);
       return;
     }

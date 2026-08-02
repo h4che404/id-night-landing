@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   DESKTOP_NAV_VIEWPORTS,
   EVIDENCE_ROOT,
+  FIRST_SCROLL_PROFILES,
   FIRST_SCROLL_VIEWPORTS,
   MOBILE_VIEWPORTS,
   MOBILE_NAV_VIEWPORTS,
@@ -28,12 +29,19 @@ test("viewport matrices stay exact", () => {
   assert.deepEqual(MOBILE_NAV_VIEWPORTS, [{ width: 320, height: 812 }, { width: 390, height: 844 }]);
   assert.deepEqual(NEURAL_VIEWPORTS, [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
   assert.deepEqual(FIRST_SCROLL_VIEWPORTS, [{ width: 375, height: 812 }, { width: 1440, height: 900 }]);
+  assert.deepEqual(FIRST_SCROLL_PROFILES, [
+    { viewport: { width: 320, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
+    { viewport: { width: 375, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
+    { viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, cpuThrottleRate: 4, input: "touch" },
+    { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, cpuThrottleRate: 1, input: "wheel" },
+  ]);
 });
 
 test("first-scroll runtime gate uses percentiles and tolerates isolated scheduling variance", () => {
-  const sample = (responseMs: number, maxFrameGapMs = 18) => ({ responseMs, maxFrameGapMs, frameGaps: [16, maxFrameGapMs], scrollEvents: 2, scrollDelta: 72, canvasDraws: 30, longTasks: [] });
+  const sample = (responseMs: number, maxFrameGapMs = 18) => ({ responseMs, maxFrameGapMs, frameGaps: [16, maxFrameGapMs], scrollEvents: 2, scrollDelta: 72, canvasDraws: 30, gestureCanvasDraws: 10, settleCanvasDraws: 20, longTasks: [] });
   const result = {
-    samples: [sample(10), sample(12), sample(18), sample(20), sample(45)],
+    profile: FIRST_SCROLL_PROFILES[3],
+    samples: [sample(10), sample(12), sample(18), sample(20), sample(45)].map((entry) => ({ ...entry, dispatchAt: 100, gestureEndedAt: 140, canvasScrollPaused: false })),
     summary: { responseP50Ms: 18, responseP95Ms: 45, frameGapP95Ms: 18, maxFrameGapMs: 18 },
   };
 
@@ -42,7 +50,15 @@ test("first-scroll runtime gate uses percentiles and tolerates isolated scheduli
   assert.equal(isFirstScrollPass(result), true);
   assert.equal(isFirstScrollPass({ ...result, summary: { ...result.summary, responseP95Ms: 70 } }), false);
   assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, scrollEvents: 0 } : entry) }), false);
-  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, longTasks: [{ duration: 55 }] } : entry) }), false);
+  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, longTasks: [{ startTime: 120, duration: 55 }, { startTime: 130, duration: 58 }] } : entry) }), false);
+
+  const mobileResult = {
+    profile: FIRST_SCROLL_PROFILES[1],
+    samples: result.samples.map((entry) => ({ ...entry, gestureCanvasDraws: 0, gestureCanvasPaused: true, settleCanvasDraws: 6, canvasScrollOptimized: true, canvasVisible: true, canvasDpr: 1.5 })),
+    summary: { responseP50Ms: 80, responseP95Ms: 140, frameGapP95Ms: 80, maxFrameGapMs: 120 },
+  };
+  assert.equal(isFirstScrollPass(mobileResult), true);
+  assert.equal(isFirstScrollPass({ ...mobileResult, samples: mobileResult.samples.map((entry, index) => index ? entry : { ...entry, gestureCanvasDraws: 3 }) }), false);
 });
 
 test("evaluateViewportFindings passes when essential bounds fit", () => {
