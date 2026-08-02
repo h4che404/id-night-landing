@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   DESKTOP_NAV_VIEWPORTS,
   EVIDENCE_ROOT,
+  FIRST_SCROLL_VIEWPORTS,
   MOBILE_VIEWPORTS,
   MOBILE_NAV_VIEWPORTS,
   NEURAL_VIEWPORTS,
@@ -13,8 +14,10 @@ import {
   isHeroPalettePass,
   isProductionViewportPass,
   isExploreMenuPass,
+  isFirstScrollPass,
   isMobileMenuPass,
   parsePngDimensions,
+  percentile,
   resolveOutputDir,
 } from "../scripts/homepage-mobile-cdp-harness.mjs";
 
@@ -24,6 +27,22 @@ test("viewport matrices stay exact", () => {
   assert.deepEqual(DESKTOP_NAV_VIEWPORTS, [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }]);
   assert.deepEqual(MOBILE_NAV_VIEWPORTS, [{ width: 320, height: 812 }, { width: 390, height: 844 }]);
   assert.deepEqual(NEURAL_VIEWPORTS, [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
+  assert.deepEqual(FIRST_SCROLL_VIEWPORTS, [{ width: 375, height: 812 }, { width: 1440, height: 900 }]);
+});
+
+test("first-scroll runtime gate uses percentiles and tolerates isolated scheduling variance", () => {
+  const sample = (responseMs: number, maxFrameGapMs = 18) => ({ responseMs, maxFrameGapMs, frameGaps: [16, maxFrameGapMs], scrollEvents: 2, scrollDelta: 72, canvasDraws: 30, longTasks: [] });
+  const result = {
+    samples: [sample(10), sample(12), sample(18), sample(20), sample(45)],
+    summary: { responseP50Ms: 18, responseP95Ms: 45, frameGapP95Ms: 18, maxFrameGapMs: 18 },
+  };
+
+  assert.equal(percentile([20, 10, 40, 30], 0.5), 20);
+  assert.equal(percentile([], 0.95), null);
+  assert.equal(isFirstScrollPass(result), true);
+  assert.equal(isFirstScrollPass({ ...result, summary: { ...result.summary, responseP95Ms: 70 } }), false);
+  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, scrollEvents: 0 } : entry) }), false);
+  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, longTasks: [{ duration: 55 }] } : entry) }), false);
 });
 
 test("evaluateViewportFindings passes when essential bounds fit", () => {

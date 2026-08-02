@@ -39,6 +39,11 @@ export default function NeuralBackground() {
     let positions = new Float32Array(0);
     const nearestIndexes = new Int16Array(MAX_CURSOR_LINKS);
     const nearestDistances = new Float32Array(MAX_CURSOR_LINKS);
+    const linkOpacitySteps = 8;
+    const linkSegments = Array.from(
+      { length: PARTICLE_LINK_COLORS.length * linkOpacitySteps },
+      () => [] as number[],
+    );
     const pointer = { x: 0, y: 0, active: false, strength: 0 };
     let visible = false;
     let drawCount = 0;
@@ -77,6 +82,7 @@ export default function NeuralBackground() {
       context.shadowBlur = PARTICLE_LINK_GLOW;
       const threshold = Math.min(190, width * 0.22);
       const thresholdSquared = threshold * threshold;
+      for (const segments of linkSegments) segments.length = 0;
 
       for (let index = 0; index < points.length; index += 1) {
         const fromX = positions[index * 2];
@@ -88,13 +94,26 @@ export default function NeuralBackground() {
 
           if (distanceSquared > thresholdSquared) continue;
           const distance = Math.sqrt(distanceSquared);
-          const linkColor = PARTICLE_LINK_COLORS[(index + otherIndex) % PARTICLE_LINK_COLORS.length];
-          context.globalAlpha = 1 - distance / threshold;
-          context.strokeStyle = linkColor;
-          context.shadowColor = linkColor;
+          const opacityIndex = Math.round((1 - distance / threshold) * (linkOpacitySteps - 1));
+          if (opacityIndex === 0) continue;
+          const colorIndex = (index + otherIndex) % PARTICLE_LINK_COLORS.length;
+          linkSegments[colorIndex * linkOpacitySteps + opacityIndex].push(fromX, fromY, toX, toY);
+        }
+      }
+
+      for (let colorIndex = 0; colorIndex < PARTICLE_LINK_COLORS.length; colorIndex += 1) {
+        const linkColor = PARTICLE_LINK_COLORS[colorIndex];
+        context.strokeStyle = linkColor;
+        context.shadowColor = linkColor;
+        for (let opacityIndex = 1; opacityIndex < linkOpacitySteps; opacityIndex += 1) {
+          const segments = linkSegments[colorIndex * linkOpacitySteps + opacityIndex];
+          if (!segments.length) continue;
+          context.globalAlpha = opacityIndex / (linkOpacitySteps - 1);
           context.beginPath();
-          context.moveTo(fromX, fromY);
-          context.lineTo(toX, toY);
+          for (let offset = 0; offset < segments.length; offset += 4) {
+            context.moveTo(segments[offset], segments[offset + 1]);
+            context.lineTo(segments[offset + 2], segments[offset + 3]);
+          }
           context.stroke();
         }
       }
@@ -130,15 +149,26 @@ export default function NeuralBackground() {
 
       context.globalAlpha = 1;
       context.shadowBlur = PARTICLE_NODE_GLOW;
-      for (let index = 0; index < points.length; index += 1) {
-        const radius = index % 6 === 0 ? PARTICLE_NODE_HIGHLIGHT_RADIUS : PARTICLE_NODE_RADIUS;
-        const nodeColor = PARTICLE_NODE_COLORS[index % PARTICLE_NODE_COLORS.length];
+      for (let colorIndex = 0; colorIndex < PARTICLE_NODE_COLORS.length; colorIndex += 1) {
+        const nodeColor = PARTICLE_NODE_COLORS[colorIndex];
         context.fillStyle = nodeColor;
         context.shadowColor = nodeColor;
         context.beginPath();
-        context.arc(positions[index * 2], positions[index * 2 + 1], radius, 0, Math.PI * 2);
+        for (let index = colorIndex; index < points.length; index += PARTICLE_NODE_COLORS.length) {
+          if (index % 6 === 0) continue;
+          context.moveTo(positions[index * 2] + PARTICLE_NODE_RADIUS, positions[index * 2 + 1]);
+          context.arc(positions[index * 2], positions[index * 2 + 1], PARTICLE_NODE_RADIUS, 0, Math.PI * 2);
+        }
         context.fill();
       }
+      context.fillStyle = PARTICLE_NODE_COLORS[0];
+      context.shadowColor = PARTICLE_NODE_COLORS[0];
+      context.beginPath();
+      for (let index = 0; index < points.length; index += 6) {
+        context.moveTo(positions[index * 2] + PARTICLE_NODE_HIGHLIGHT_RADIUS, positions[index * 2 + 1]);
+        context.arc(positions[index * 2], positions[index * 2 + 1], PARTICLE_NODE_HIGHLIGHT_RADIUS, 0, Math.PI * 2);
+      }
+      context.fill();
       context.shadowBlur = 0;
 
       drawCount += 1;
