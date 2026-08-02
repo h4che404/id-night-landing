@@ -5,8 +5,8 @@ import test from "node:test";
 import {
   DESKTOP_NAV_VIEWPORTS,
   EVIDENCE_ROOT,
-  FIRST_SCROLL_PROFILES,
-  FIRST_SCROLL_VIEWPORTS,
+  ACTIVE_SCROLL_PROFILES,
+  MOBILE_COMPOSITING_MODES,
   MOBILE_VIEWPORTS,
   MOBILE_NAV_VIEWPORTS,
   NEURAL_VIEWPORTS,
@@ -15,7 +15,7 @@ import {
   isHeroPalettePass,
   isProductionViewportPass,
   isExploreMenuPass,
-  isFirstScrollPass,
+  isActiveScrollPass,
   isMobileMenuPass,
   parsePngDimensions,
   percentile,
@@ -28,37 +28,31 @@ test("viewport matrices stay exact", () => {
   assert.deepEqual(DESKTOP_NAV_VIEWPORTS, [{ width: 1024, height: 640 }, { width: 1280, height: 720 }, { width: 1440, height: 700 }, { width: 1920, height: 700 }]);
   assert.deepEqual(MOBILE_NAV_VIEWPORTS, [{ width: 320, height: 812 }, { width: 390, height: 844 }]);
   assert.deepEqual(NEURAL_VIEWPORTS, [{ width: 320, height: 812 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);
-  assert.deepEqual(FIRST_SCROLL_VIEWPORTS, [{ width: 375, height: 812 }, { width: 1440, height: 900 }]);
-  assert.deepEqual(FIRST_SCROLL_PROFILES, [
-    { viewport: { width: 320, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
-    { viewport: { width: 375, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch" },
-    { viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, cpuThrottleRate: 4, input: "touch" },
-    { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, cpuThrottleRate: 1, input: "wheel" },
+  assert.deepEqual(ACTIVE_SCROLL_PROFILES, [
+    { id: "mobile-touch", viewport: { width: 375, height: 812 }, deviceScaleFactor: 3, cpuThrottleRate: 6, input: "touch", softwareRendering: false },
+    { id: "desktop-wheel", viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, cpuThrottleRate: 1, input: "wheel", softwareRendering: false },
+    { id: "safari-proxy", viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, cpuThrottleRate: 4, input: "wheel", softwareRendering: true },
   ]);
+  assert.deepEqual(MOBILE_COMPOSITING_MODES, ["normal", "canvas-bitmap", "canvas-hidden", "radial-gradients-disabled", "hero-gradients-disabled", "navbar-effects-disabled", "canvas-promoted", "hero-contained", "scroll-listener-attribution", "scroll-listeners-disabled", "intersection-observers-disabled", "reduced-motion", "observers-listeners-disabled"]);
 });
 
-test("first-scroll runtime gate uses percentiles and tolerates isolated scheduling variance", () => {
-  const sample = (responseMs: number, maxFrameGapMs = 18) => ({ responseMs, maxFrameGapMs, frameGaps: [16, maxFrameGapMs], scrollEvents: 2, scrollDelta: 72, canvasDraws: 30, gestureCanvasDraws: 10, settleCanvasDraws: 20, longTasks: [] });
+test("active-scroll runtime gate requires sustained draw suppression and idle resume", () => {
+  const sample = (responseMs: number, frameGap = 18) => ({ responseMs, activeFrameGaps: [16, frameGap], inputEvents: 10, scrollEvents: 10, scrollDelta: 360, activeScrollMs: 540, activeCanvasDraws: 1, activeCanvasPaused: true, scrollPausedThroughout: true, resumeCanvasDraws: 20, resumeDelayMs: 160, canvasScrollOptimized: true, canvasVisible: true, canvasDpr: 1.5, activeLongTasks: [] });
   const result = {
-    profile: FIRST_SCROLL_PROFILES[3],
-    samples: [sample(10), sample(12), sample(18), sample(20), sample(45)].map((entry) => ({ ...entry, dispatchAt: 100, gestureEndedAt: 140, canvasScrollPaused: false })),
-    summary: { responseP50Ms: 18, responseP95Ms: 45, frameGapP95Ms: 18, maxFrameGapMs: 18 },
+    profile: ACTIVE_SCROLL_PROFILES[1],
+    samples: [sample(10), sample(12), sample(18)],
+    summary: { responseP50Ms: 12, responseP95Ms: 18, activeFrameGapP95Ms: 18, activeLongTasks: 0 },
   };
 
   assert.equal(percentile([20, 10, 40, 30], 0.5), 20);
   assert.equal(percentile([], 0.95), null);
-  assert.equal(isFirstScrollPass(result), true);
-  assert.equal(isFirstScrollPass({ ...result, summary: { ...result.summary, responseP95Ms: 70 } }), false);
-  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, scrollEvents: 0 } : entry) }), false);
-  assert.equal(isFirstScrollPass({ ...result, samples: result.samples.map((entry, index) => index === 0 ? { ...entry, longTasks: [{ startTime: 120, duration: 55 }, { startTime: 130, duration: 58 }] } : entry) }), false);
-
-  const mobileResult = {
-    profile: FIRST_SCROLL_PROFILES[1],
-    samples: result.samples.map((entry) => ({ ...entry, gestureCanvasDraws: 0, gestureCanvasPaused: true, settleCanvasDraws: 6, canvasScrollOptimized: true, canvasVisible: true, canvasDpr: 1.5 })),
-    summary: { responseP50Ms: 80, responseP95Ms: 140, frameGapP95Ms: 80, maxFrameGapMs: 120 },
-  };
-  assert.equal(isFirstScrollPass(mobileResult), true);
-  assert.equal(isFirstScrollPass({ ...mobileResult, samples: mobileResult.samples.map((entry, index) => index ? entry : { ...entry, gestureCanvasDraws: 3 }) }), false);
+  assert.equal(isActiveScrollPass(result), true);
+  assert.equal(isActiveScrollPass({ ...result, samples: result.samples.map((entry, index) => index ? entry : { ...entry, activeCanvasDraws: 3 }) }), false);
+  assert.equal(isActiveScrollPass({ ...result, samples: result.samples.map((entry, index) => index ? entry : { ...entry, inputEvents: 1 }) }), false);
+  assert.equal(isActiveScrollPass({ ...result, summary: { ...result.summary, activeLongTasks: 3 } }), false);
+  assert.equal(isActiveScrollPass({ ...result, samples: result.samples.map((entry, index) => index ? entry : { ...entry, scrollPausedThroughout: false }) }), false);
+  assert.equal(isActiveScrollPass({ ...result, samples: result.samples.map((entry, index) => index ? entry : { ...entry, resumeCanvasDraws: 0 }) }), false);
+  assert.equal(isActiveScrollPass({ ...result, samples: result.samples.map((entry, index) => index ? entry : { ...entry, activeScrollMs: 200 }) }), false);
 });
 
 test("evaluateViewportFindings passes when essential bounds fit", () => {

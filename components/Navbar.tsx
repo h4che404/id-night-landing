@@ -180,7 +180,7 @@ export default function Navbar() {
       initial={reduceMotion ? false : { y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: reduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300 motion-reduce:transition-none ${scrolled ? "border-white/8 bg-[#08080F]/88 shadow-lg shadow-black/20 backdrop-blur-xl" : "border-transparent bg-gradient-to-b from-[#08080F]/70 to-transparent"}`}
+      className={`fixed inset-x-0 top-0 z-50 border-b lg:transition-colors lg:duration-300 motion-reduce:transition-none ${scrolled ? "border-white/8 bg-[#08080F]/88 shadow-lg shadow-black/20 backdrop-blur-xl" : "border-transparent bg-gradient-to-b from-[#08080F]/70 to-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
         <Link href="/" className="flex flex-shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">

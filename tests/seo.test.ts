@@ -879,6 +879,7 @@ test("homepage motion isolates client behavior and honors reduced-motion and lif
   assert.match(navbarSource, /event\.key !== "Tab"/);
   assert.match(navbarSource, /!href\.includes\("#"\)/);
   assert.match(navbarSource, /transition=\{\{ duration: reduceMotion \? 0/);
+  assert.match(navbarSource, /border-b lg:transition-colors lg:duration-300 motion-reduce:transition-none/);
 });
 
 test("footer keeps priority homepage access while preserving secondary routes", () => {

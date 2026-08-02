@@ -1,6 +1,6 @@
 export const MAX_DPR = 1.5;
 export const FRAME_INTERVAL = 1000 / 60;
-export const TOUCH_SCROLL_IDLE_MS = 140;
+export const SCROLL_IDLE_MS = 140;
 export const POINTER_RADIUS = 260;
 export const POINTER_MAX_OFFSET = 9;
 export const MAX_CURSOR_LINKS = 6;
@@ -99,8 +99,8 @@ export function getCappedDpr(devicePixelRatio: number) {
   return Math.min(Math.max(devicePixelRatio || 1, 1), MAX_DPR);
 }
 
-export function shouldAnimate(visible: boolean, documentHidden: boolean, reducedMotion: boolean, touchScrollPaused = false) {
-  return visible && !documentHidden && !reducedMotion && !touchScrollPaused;
+export function shouldAnimate(visible: boolean, documentHidden: boolean, reducedMotion: boolean, scrollPaused = false) {
+  return visible && !documentHidden && !reducedMotion && !scrollPaused;
 }
 
 export function createFrameLoop({ request, cancel, onFrame, onSchedule }: FrameLoopOptions) {

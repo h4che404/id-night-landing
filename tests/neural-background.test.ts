@@ -25,7 +25,7 @@ import {
   PARTICLE_NODE_RADIUS,
   POINTER_MAX_OFFSET,
   POINTER_RADIUS,
-  TOUCH_SCROLL_IDLE_MS,
+  SCROLL_IDLE_MS,
   createFrameLoop,
   createPoints,
   getCappedDpr,
@@ -161,19 +161,24 @@ test("animation policy and component contracts cover visibility, reduced motion,
   assert.equal(shouldAnimate(true, false, true), false);
   assert.equal(shouldAnimate(true, false, false, true), false);
   assert.equal(FRAME_INTERVAL, 1000 / 60);
-  assert.equal(TOUCH_SCROLL_IDLE_MS, 140);
+  assert.equal(SCROLL_IDLE_MS, 140);
   assert.match(componentSource, /document\.addEventListener\("visibilitychange", syncAnimation\)/);
   assert.match(componentSource, /document\.removeEventListener\("visibilitychange", syncAnimation\)/);
   assert.match(componentSource, /loop\.dispose\(\)/);
   assert.match(componentSource, /resizeObserver\.disconnect\(\)/);
   assert.match(componentSource, /intersectionObserver\.disconnect\(\)/);
   assert.match(componentSource, /if \(!reduceMotion\) \{[\s\S]*pointerTarget\.addEventListener/);
-  assert.match(componentSource, /matchMedia\("\(pointer: coarse\)"\)/);
-  assert.match(componentSource, /pointerTarget\.addEventListener\("touchstart", pauseForTouchScroll/);
-  assert.match(componentSource, /if \(!touchScrollPaused \|\| touchActive\) return/);
-  assert.match(componentSource, /pointerTarget\.addEventListener\("touchend", endTouchScroll/);
-  assert.match(componentSource, /window\.addEventListener\("scroll", resumeAfterScroll/);
-  assert.match(componentSource, /window\.removeEventListener\("scroll", resumeAfterScroll\)/);
+  assert.doesNotMatch(componentSource, /matchMedia\("\(pointer: coarse\)"\)/);
+  assert.match(componentSource, /activeTouches = event\.touches\.length/);
+  assert.match(componentSource, /window\.addEventListener\("touchmove", onTouchStartOrMove/);
+  assert.match(componentSource, /window\.addEventListener\("touchend", onTouchEndOrCancel/);
+  assert.match(componentSource, /window\.addEventListener\("touchcancel", onTouchEndOrCancel/);
+  assert.match(componentSource, /window\.addEventListener\("wheel", onWheel/);
+  assert.match(componentSource, /window\.addEventListener\("scroll", onScroll/);
+  assert.match(componentSource, /activityId !== scrollActivityId \|\| activeTouches > 0/);
+  assert.match(componentSource, /window\.removeEventListener\("wheel", onWheel\)/);
+  assert.match(componentSource, /window\.removeEventListener\("scroll", onScroll\)/);
+  assert.match(componentSource, /window\.removeEventListener\("touchcancel", onTouchEndOrCancel\)/);
   assert.doesNotMatch(componentSource, /window\.addEventListener\("pointermove"/);
 });
 
@@ -199,8 +204,8 @@ test("runtime evidence requires stopped offscreen and reduced-motion counters pl
       { viewport: { width: 1920, height: 1080 }, pointCount: 72 },
     ],
     visibleSamples: [
-      { cadence: 59.2, drawDelta: 71, start: snapshot(), end: snapshot({ sampledAt: 1_300 }) },
-      { cadence: 58.4, drawDelta: 70, start: snapshot(), end: snapshot({ sampledAt: 1_300 }) },
+      { cadence: 59.2, sourceCadence: 120, drawDelta: 71, rawRafDelta: 144, start: snapshot(), end: snapshot({ sampledAt: 1_300 }) },
+      { cadence: 58.4, sourceCadence: 120, drawDelta: 70, rawRafDelta: 144, start: snapshot(), end: snapshot({ sampledAt: 1_300 }) },
     ],
     interactive: snapshot(),
     offscreenStart: snapshot({ drawCount: 25, rafRequests: 50, rafActive: "false" }),
