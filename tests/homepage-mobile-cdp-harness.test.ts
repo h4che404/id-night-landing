@@ -22,6 +22,10 @@ import {
   resolveOutputDir,
 } from "../scripts/homepage-mobile-cdp-harness.mjs";
 
+test("the developer-only physical Android diagnostic harness is not shipped", () => {
+  assert.equal(fs.existsSync(path.resolve(import.meta.dirname, "../scripts/homepage-android-physical-harness.mjs")), false);
+});
+
 test("viewport matrices stay exact", () => {
   assert.deepEqual(MOBILE_VIEWPORTS, [{ width: 320, height: 812 }, { width: 360, height: 800 }, { width: 375, height: 812 }, { width: 390, height: 844 }, { width: 430, height: 932 }]);
   assert.deepEqual(REGRESSION_VIEWPORTS, [{ width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]);

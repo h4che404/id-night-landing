@@ -4,7 +4,6 @@ import path from "node:path";
 import test from "node:test";
 import {
   CURSOR_LINK_COLOR,
-  CURSOR_LINK_GLOW,
   CURSOR_LINK_WIDTH,
   CONSTELLATION_BLUE,
   CONSTELLATION_CYAN,
@@ -17,10 +16,8 @@ import {
   MOBILE_POINT_MAX,
   MOBILE_POINT_MIN,
   PARTICLE_LINK_COLORS,
-  PARTICLE_LINK_GLOW,
   PARTICLE_LINK_WIDTH,
   PARTICLE_NODE_COLORS,
-  PARTICLE_NODE_GLOW,
   PARTICLE_NODE_HIGHLIGHT_RADIUS,
   PARTICLE_NODE_RADIUS,
   POINTER_MAX_OFFSET,
@@ -38,6 +35,7 @@ import {
 import { isHeroPalettePass, isNeuralBackgroundPass } from "../scripts/homepage-mobile-cdp-harness.mjs";
 
 const componentSource = fs.readFileSync(path.resolve(import.meta.dirname, "../components/home/NeuralBackground.tsx"), "utf8");
+const moduleSource = fs.readFileSync(path.resolve(import.meta.dirname, "../components/home/neural-background.ts"), "utf8");
 
 test("point density adapts within bounded mobile and desktop budgets", () => {
   assert.deepEqual([MOBILE_POINT_MIN, MOBILE_POINT_MAX], [28, 34]);
@@ -80,12 +78,18 @@ test("links and nodes use three sampled logo tones with brighter bounded cursor 
   assert.match(CURSOR_LINK_COLOR, /0\.86/);
   assert.deepEqual(PARTICLE_LINK_COLORS, ["rgba(48, 208, 240, 0.66)", "rgba(80, 143, 240, 0.62)", "rgba(160, 80, 240, 0.6)"]);
   assert.deepEqual(PARTICLE_NODE_COLORS, ["rgba(48, 208, 240, 1)", "rgba(80, 143, 240, 0.98)", "rgba(160, 80, 240, 0.98)"]);
-  assert.deepEqual([PARTICLE_LINK_WIDTH, PARTICLE_LINK_GLOW, CURSOR_LINK_WIDTH, CURSOR_LINK_GLOW], [1.2, 2.5, 1.5, 4]);
-  assert.deepEqual([PARTICLE_NODE_RADIUS, PARTICLE_NODE_HIGHLIGHT_RADIUS, PARTICLE_NODE_GLOW], [2.3, 3.5, 9]);
+  assert.deepEqual([PARTICLE_LINK_WIDTH, CURSOR_LINK_WIDTH], [1.2, 1.5]);
+  assert.deepEqual([PARTICLE_NODE_RADIUS, PARTICLE_NODE_HIGHLIGHT_RADIUS], [2.3, 3.5]);
   assert.match(componentSource, /context\.strokeStyle = CURSOR_LINK_COLOR/);
   assert.match(componentSource, /nearestIndexes = new Int16Array\(MAX_CURSOR_LINKS\)/);
-  assert.match(componentSource, /context\.shadowBlur = PARTICLE_LINK_GLOW/);
-  assert.match(componentSource, /context\.shadowBlur = PARTICLE_NODE_GLOW/);
+  assert.match(componentSource, /context\.globalAlpha = opacityIndex \/ \(linkOpacitySteps - 1\)/);
+  assert.match(componentSource, /if \(opacityIndex >= 2\) \{\s+\/\/ Keep the closest connections crisp and dimensional without per-frame blur\.\s+context\.lineWidth = PARTICLE_LINK_WIDTH \+ 1\.2;\s+context\.globalAlpha = 0\.24;\s+context\.stroke\(\);\s+context\.lineWidth = PARTICLE_LINK_WIDTH;/);
+  assert.match(componentSource, /if \(index % 6 === 0\) continue/);
+});
+
+test("canvas drawing remains shadow-free and does not expose stale glow constants", () => {
+  assert.doesNotMatch(componentSource, /context\.shadow(?:Blur|Color|OffsetX|OffsetY)/);
+  assert.doesNotMatch(moduleSource, /export const (?:PARTICLE_LINK_GLOW|CURSOR_LINK_GLOW|PARTICLE_NODE_GLOW)/);
 });
 
 test("runtime palette evidence requires a brighter composite with every logo tone visible", () => {
